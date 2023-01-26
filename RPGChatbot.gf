@@ -4,6 +4,7 @@ cat
   Question ;
   Command ;
   Result ;
+  Narrative ;
   Outcome ; 
   Enemy ;
   Item ;
@@ -11,11 +12,13 @@ cat
   MoveDirection ;
   QuestionDirection ;
   Object ;
+  Room ;
   RoomAdjective ;
   ItemList ;
   ItemAttribute ;
   EnemyAttribute ;
   EnemyPower ;
+  Action ;
 
 fun
   -- User actions
@@ -28,7 +31,7 @@ fun
   -- Attack <enemy name> with <item name>.
   Attack : Enemy -> Item -> Command ;
   -- Loot <enemy name>
-  Loot : Enemy -> Command ;
+  Loot : Object -> Command ;
   -- Put <item name> <into backpack | onto body parts>
   Put : Item -> Location -> Command ;
   -- Drop sharp sword
@@ -44,10 +47,10 @@ fun
   APut : Item -> Location -> Result ;
   -- Depressed shark doesn't exist.
   EnemyMissing : Enemy -> Result ;
-  -- You find dull axe.
+  -- You found a dull axe.
   LootSuccess : Item -> Result ;
   -- You arrive into a room <number>.
-  RoomIntro : Int -> Result ;
+  RoomIntro : Room -> RoomAdjective -> Narrative ;
   -- Room is damp.
   RoomDescription : RoomAdjective -> Result ;
   -- Dragon is weak against sharp items.
@@ -70,14 +73,21 @@ fun
   EnemyObject : Enemy -> Object ;
 
   -- Objects that can exist in some direction.
-  -- There is a door in front of you.
-  Door, Chest, Rock, Exit, Gate : Object ;
-
+  -- There is a door.
+  Door, Chest, Boulder, Exit, Gate, Bag, Wall : Object ;
+  -- Locations of where items can be put
   Pockets, Backpack, Head, Feet, Hands, Pants : Location ;
-  Damp, Bright, Dark, Dim : RoomAdjective ;
+  -- ... and it is damp
+  Damp, Bright, Dark, Creepy, Scary, Peaceful : RoomAdjective ;
   Forward, Backward, Left, Right : MoveDirection ;
   Infront, Behind, LeftSide, RightSide : QuestionDirection ;
+  -- Verbs used for fight outcome.
   Win, Lose : Outcome ;
+  -- Enemies can be either strong or weak against something.
   WeakAgainst, StrongAgainst : EnemyPower ;
+  -- Helper verbs
+  find_V2, loot_V2, drop_V2, put_V2, describe_V2, attack_V2, move_V2 : Action ;
+  -- Used for creating numbered rooms such as "Room 15"
+  RoomNumber : Int -> Room ;
   
 }
