@@ -70,6 +70,8 @@ lin
   -- Intro phrase when arriving to a new room. In the form of "You arrived into room <number> and it is <adjective>".
   RoomIntro room adj =
     mkUtt (mkS and_Conj (mkS pastTense (mkCl you_NP (mkV2 (mkV "arrive") to_Prep) room)) (mkS (mkCl it_NP adj))) ;
+  --EnemyDescription enemy enemyPow attribute =
+  --  mkUtt ();
   
   RoomNumber i = mkNP (mkCN (mkN "room") (symb i)) ;
   -- Lexicon

@@ -86,7 +86,7 @@ fun
   -- Enemies can be either strong or weak against something.
   WeakAgainst, StrongAgainst : EnemyPower ;
   -- Helper verbs
-  find_V2, loot_V2, drop_V2, put_V2, describe_V2, attack_V2, move_V2 : Action ;
+  find_V2, loot_V2, drop_V2, put_V2, describe_V2, attack_V2, move_V2, search_V2 : Action ;
   -- Used for creating numbered rooms such as "Room 15"
   RoomNumber : Int -> Room ;
   
