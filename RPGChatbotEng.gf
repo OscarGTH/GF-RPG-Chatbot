@@ -1,7 +1,6 @@
 concrete RPGChatbotEng of RPGChatbot = open
   Prelude,
   SymbolicEng,
-  SymbolEng,
   SyntaxEng,
   ParadigmsEng,
   IdiomEng,
@@ -15,6 +14,8 @@ lincat
   Outcome = V2 ;
   Enemy = CN ;
   EnemyAttribute = A ;
+  EnemyPower = A2 ;
+  ItemDescription = NP ;
   Room = NP ;
   Item = CN ;
   ItemAttribute = A ;
@@ -70,10 +71,10 @@ lin
   -- Intro phrase when arriving to a new room. In the form of "You arrived into room <number> and it is <adjective>".
   RoomIntro room adj =
     mkUtt (mkS and_Conj (mkS pastTense (mkCl you_NP (mkV2 (mkV "arrive") to_Prep) room)) (mkS (mkCl it_NP adj))) ;
-  --EnemyDescription enemy enemyPow attribute =
-  --  mkUtt ();
+  EnemyDescription enemy power itemAttr =
+    mkUtt (mkCl (mkNP the_Det enemy) power itemAttr) ;
   
-  RoomNumber i = mkNP (mkCN (mkN "room") (symb i)) ;
+  
   -- Lexicon
   -- Moving directions
   Forward = mkNP (mkN "forward") ;
@@ -81,6 +82,8 @@ lin
   Left = mkNP (mkN "left") ;
   Right = mkNP (mkN "right") ;
 
+  RoomNumber i = mkNP (mkCN (mkN "room") (SymbolicEng.symb i)) ;
+  
   -- Question directions
   Infront = mkPrep "in front of" ;
   Behind = mkPrep "behind" ;
@@ -99,10 +102,10 @@ lin
   Orc = mkCN (mkN "orc") ;
   Goblin = mkCN (mkN "goblin") ;
   Dragon = mkCN (mkN "dragon") ;
-  Snake = mkCN (mkN "snake") ;
+  Minotaur = mkCN (mkN "minotaur") ;
   Mouse = mkCN (mkN "mouse") ;
   Tiger = mkCN (mkN "tiger") ;
-  Shark = mkCN (mkN "shark") ;
+  Bandit = mkCN (mkN "bandit") ;
   -- Enemy modifiers
   Angry = mkA "angry" ;
   Happy = mkA "happy" ;
@@ -159,4 +162,7 @@ lin
   move_V2 = mkV2 (mkV "move") ;
   search_V2 = mkV2(mkV "search") ;
 
+  ItemType adj = mkNP (mkCN adj (mkN "items")) ;
+  Strong = mkA2 (mkA "strong") (mkPrep "against") ; 
+  Weak = mkA2 (mkA "weak") (mkPrep "against") ;
 }

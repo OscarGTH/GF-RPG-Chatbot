@@ -16,6 +16,7 @@ cat
   RoomAdjective ;
   ItemList ;
   ItemAttribute ;
+  ItemDescription ;
   EnemyAttribute ;
   EnemyPower ;
   Action ;
@@ -43,7 +44,7 @@ fun
   -- There is a <door, enemy, chest, exit>
   AWhatIsInDirection : Object -> Result ;
   -- <Location> contains <list of items>
-  AWhatItemsAreIn : Location -> ItemList -> Result ;
+  AWhichItemsAreIn : Location -> ItemList -> Result ;
   APut : Item -> Location -> Result ;
   -- Depressed shark doesn't exist.
   EnemyMissing : Enemy -> Result ;
@@ -54,12 +55,15 @@ fun
   -- Room is damp.
   RoomDescription : RoomAdjective -> Result ;
   -- Dragon is weak against sharp items.
-  EnemyDescription : Enemy -> EnemyPower -> ItemAttribute -> Result ;
+  EnemyDescription : Enemy -> EnemyPower -> ItemDescription -> Result ;
   -- There is an angry dragon with shiny sword.
   EnemyEncountered : Enemy -> Item -> Result ;
+  
   -- Lexicon
   -- Shiny sword, Dull axe, Sharp bread
   ItemMod : ItemAttribute -> Item -> Item ;
+  -- Shiny items, Dull items
+  ItemType : ItemAttribute -> ItemDescription ;
   Sharp, Dull, Shiny, Fiery, Mysterious, Frozen : ItemAttribute ;
   Sword, Axe, Book, Bread, Ring, Knife, Hammer, Key : Item;
   
@@ -67,26 +71,33 @@ fun
   EnemyMod : EnemyAttribute -> Enemy -> Enemy ;
   Angry, Happy, Depressed : EnemyAttribute ;
 
-  Orc, Goblin, Dragon, Snake, Mouse, Tiger, Shark : Enemy;
+  Orc, Goblin, Dragon, Bandit, Mouse, Tiger, Minotaur : Enemy;
 
-  -- There is a dragon on the left.
+  -- "There is a dragon on the left."
   EnemyObject : Enemy -> Object ;
 
   -- Objects that can exist in some direction.
-  -- There is a door.
+  -- "There is a door"
   Door, Chest, Boulder, Exit, Gate, Bag, Wall : Object ;
+
   -- Locations of where items can be put
   Pockets, Backpack, Head, Feet, Hands, Pants : Location ;
-  -- ... and it is damp
+
+  -- "... and it is damp"
   Damp, Bright, Dark, Creepy, Scary, Peaceful : RoomAdjective ;
+
   Forward, Backward, Left, Right : MoveDirection ;
   Infront, Behind, LeftSide, RightSide : QuestionDirection ;
+
   -- Verbs used for fight outcome.
   Win, Lose : Outcome ;
+
   -- Enemies can be either strong or weak against something.
-  WeakAgainst, StrongAgainst : EnemyPower ;
+  Weak, Strong : EnemyPower ;
+
   -- Helper verbs
   find_V2, loot_V2, drop_V2, put_V2, describe_V2, attack_V2, move_V2, search_V2 : Action ;
+
   -- Used for creating numbered rooms such as "Room 15"
   RoomNumber : Int -> Room ;
   
