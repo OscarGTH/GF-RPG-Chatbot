@@ -4,7 +4,6 @@ cat
   Question ;
   Command ;
   Result ;
-  Narrative ;
   Outcome ; 
   Enemy ;
   Item ;
@@ -26,14 +25,14 @@ fun
 
   -- What is <in front of me | behind me | on my left | on my right | in my backpack>
   QWhatIsInDirection : QuestionDirection -> Question ;
-  QWhichItemsAreIn : Location -> Question ;
+  QWhichItemsAre : Location -> Question ;
   -- Move forward, left, right, backwards.
   Move : MoveDirection -> Command ;
   -- Attack <enemy name> with <item name>.
   Attack : Enemy -> Item -> Command ;
   -- Loot <enemy name>
   Loot : Object -> Command ;
-  -- Put <item name> <into backpack | onto body parts>
+  -- Put <item name> <to backpack | to feet>
   Put : Item -> Location -> Command ;
   -- Drop sharp sword
   Drop : Item -> Command ;
@@ -44,28 +43,27 @@ fun
   -- There is a <door, enemy, chest, exit>
   AWhatIsInDirection : Object -> Result ;
   -- <Location> contains <list of items>
-  AWhichItemsAreIn : Location -> ItemList -> Result ;
+  AWhichItemsAre : Location -> ItemList -> Result ;
+  -- Successfully put bread to pants.
   APut : Item -> Location -> Result ;
   -- Depressed shark doesn't exist.
   EnemyMissing : Enemy -> Result ;
   -- You found a dull axe.
   LootSuccess : Item -> Result ;
-  -- You arrive into a room <number>.
-  RoomIntro : Room -> RoomAdjective -> Narrative ;
-  -- Room is damp.
-  RoomDescription : RoomAdjective -> Result ;
   -- Dragon is weak against sharp items.
   EnemyDescription : Enemy -> EnemyPower -> ItemDescription -> Result ;
   -- There is an angry dragon with shiny sword.
   EnemyEncountered : Enemy -> Item -> Result ;
+  -- You arrive into a room <number>.
+  RoomIntro : Room -> RoomAdjective -> Result ;
   
   -- Lexicon
   -- Shiny sword, Dull axe, Sharp bread
   ItemMod : ItemAttribute -> Item -> Item ;
   -- Shiny items, Dull items
   ItemType : ItemAttribute -> ItemDescription ;
-  Sharp, Dull, Shiny, Fiery, Mysterious, Frozen : ItemAttribute ;
-  Sword, Axe, Book, Bread, Ring, Knife, Hammer, Key : Item;
+  Sharp, Dull, Broken, Legendary, Magical, Shiny, Fiery, Mysterious, Frozen : ItemAttribute ;
+  Sword, Axe, Hammer, WizardStaff, Key, ScottishKilt, LeatherSkirt, VikingHelmet, BaseballCap : Item;
   
   -- Angry dragon, Nice mouse
   EnemyMod : EnemyAttribute -> Enemy -> Enemy ;
@@ -73,15 +71,12 @@ fun
 
   Orc, Goblin, Dragon, Bandit, Mouse, Tiger, Minotaur : Enemy;
 
-  -- "There is a dragon on the left."
-  EnemyObject : Enemy -> Object ;
-
   -- Objects that can exist in some direction.
   -- "There is a door"
   Door, Chest, Boulder, Exit, Gate, Bag, Wall : Object ;
 
   -- Locations of where items can be put
-  Pockets, Backpack, Head, Feet, Hands, Pants : Location ;
+  Backpack, Head, Legs : Location ;
 
   -- "... and it is damp"
   Damp, Bright, Dark, Creepy, Scary, Peaceful : RoomAdjective ;
