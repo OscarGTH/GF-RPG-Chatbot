@@ -1,14 +1,17 @@
-concrete RPGChatbotEng of RPGChatbot = open
+concrete RPGChatbotEng of RPGChatbot = NumeralEng ** open
   Prelude,
   SymbolEng,
   SyntaxEng,
+  (S=SyntaxEng),
   NounEng,
   ParadigmsEng,
+  ConstructorsEng,
+  (C=ConstructorsEng),
   IdiomEng in {
 
 lincat
   Command = Imp ;
-  Question = Utt ;
+  Question = QCl ;
   Result = Utt ;
   Outcome = V2 ;
   Action = V2 ;
@@ -16,6 +19,7 @@ lincat
   Item = CN ;
   Object = CN ;
   Location = CN ;
+  Nouns = N ;
   MoveDirection = NP ;
   Room = NP ;
   ItemDescription = NP ;
@@ -32,9 +36,9 @@ lin
     mkImp move_V2 dir;
   Attack enemy item =
     -- Without articles, just for quality of life
-    mkImp (mkVP (mkVP attack_V2  (mkNP enemy)) (SyntaxEng.mkAdv with_Prep (mkNP item)))
+    mkImp (mkVP (mkVP attack_V2  (mkNP enemy)) (S.mkAdv with_Prep (mkNP item)))
     -- With articles, for grammatical correctness
-    | mkImp (mkVP (mkVP attack_V2 (mkNP the_Det enemy)) (SyntaxEng.mkAdv with_Prep (mkNP the_Det item))) ;
+    | mkImp (mkVP (mkVP attack_V2 (mkNP the_Det enemy)) (S.mkAdv with_Prep (mkNP the_Det item))) ;
 
   -- Looting enemies
   Loot enemy =
@@ -47,41 +51,55 @@ lin
 
   -- Moving items around locations (body parts, backpack, and pockets.)
   Put item location =
-      mkImp (mkVP (mkVP put_V2 (mkNP item)) (SyntaxEng.mkAdv to_Prep (mkNP location)))
-    | mkImp (mkVP (mkVP put_V2 (mkNP the_Det item)) (SyntaxEng.mkAdv to_Prep (mkNP location))) ;
+      mkImp (mkVP (mkVP put_V2 (mkNP item)) (S.mkAdv to_Prep (mkNP location)))
+    | mkImp (mkVP (mkVP put_V2 (mkNP the_Det item)) (S.mkAdv to_Prep (mkNP location))) ;
 
   -- Asking information about enemy.
   DescribeEnemy enemy =
     mkImp describe_V2 (mkNP the_Det enemy) ;
 
   -- [ QUESTIONS ]
-  QWhatIsInDirection direction =
-    mkUtt (mkQCl what_IP (SyntaxEng.mkAdv direction i_NP)) ;
+  QDirectionQuery direction =
+    mkQCl what_IP (S.mkAdv direction i_NP) ;
 
-  QWhichItemsAre location =
-    -- Allowing "in" and "on" prepositions because it might change (in my backpack, on my feet)
-    mkUtt (mkQCl (mkIP whichPl_IDet (mkN "item")) (SyntaxEng.mkAdv in_Prep (mkNP (mkDet i_Pron) location)))
-    | mkUtt (mkQCl (mkIP whichPl_IDet (mkN "item")) (SyntaxEng.mkAdv on_Prep (mkNP (mkDet i_Pron) location))) ;
+  QItemQuery location =
+    -- Allowing "in" and "on" prepositions because it might change (in my backpack)
+    mkQCl whatSg_IP ( S.mkAdv in_Prep ( mkNP ( C.mkQuant i_Pron ) location))
+    | mkQCl whatSg_IP ( S.mkAdv on_Prep ( mkNP (  C.mkQuant i_Pron ) location )) ;
+
 
   --[CHATBOT ANSWERS]
 
   -- Finding items as a result of looting
   LootSuccess item =
-    mkUtt (mkS pastTense (mkCl you_NP find_V2 (mkNP a_Det item))) ;
-  -- "You moved leather skirt to legs" - Result of Put action
-  APut item location =
-    mkUtt(mkS pastTense (mkCl you_NP (mkVP (mkVP (mkV2 "move")  (mkNP item)) (SyntaxEng.mkAdv to_Prep (mkNP location))))) ;
-
+    mkUtt (mkS pastTense (mkCl ( mkNP youSg_Pron ) find_V2 (mkNP a_Det item))) ;
+  -- Result of Put action
+  PutSuccess item location =
+     mkUtt ( mkS pastTense ( mkCl you_NP ( mkVP ( mkVP put_V2 ( mkNP ( item ) ) ) ( S.mkAdv to_Prep ( mkNP ( C.mkQuant youSg_Pron ) location ) ) ) ) ) ;
+  PutFail item =
+    mkUtt (mkS negativePol (mkCl you_NP (mkVP (mkVP (mkVPSlash can8know_VV (mkVPSlash put_V2)) (mkNP item )) there7to_Adv))) ;
+  -- Result of successful movement action
+  MoveSuccess direction =
+    mkUtt ( mkS pastTense ( mkCl ( mkNP youSg_Pron ) move_V2 direction ));
+  -- Result of failed movement action (eg. There is a boulder blocking the way)
+  MoveFail object =
+    mkUtt ( mkS negativePol ( mkCl ( mkNP youSg_Pron ) ( mkVP ( mkVP ( mkVP can8know_VV ( mkVP (mkV "go") ) ) there7to_Adv ) ( S.mkAdv because_Subj ( mkS ( mkCl ( mkNP a_Quant object ) ) ) ) ) ) ) ;
+  AttackSuccess enemy damage =
+    mkUtt ( mkS and_Conj ( mkS ( mkCl ( mkNP youPol_Pron ) hit_V2 ( mkNP the_Quant enemy ) ) ) ( mkS pastTense ( mkCl ( mkNP it_Pron ) lose_V2 ( mkNP a_Quant ( mkNum ( mkCard damage ) ) health_N ) ) ) ) ;
   -- Telling that enemy doesn't exist.
   EnemyMissing enemy = mkUtt (mkS negativePol (mkCl (mkNP enemy) (mkV "exist"))) ;
 
   -- Telling that enemy has been encountered.
   EnemyEncountered enemy item = 
-    mkUtt (mkCl (mkCN enemy (SyntaxEng.mkAdv with_Prep (mkNP a_Det item)))) ;
-
+    mkUtt (mkCl (mkCN enemy (S.mkAdv with_Prep (mkNP a_Det item)))) ;
+  EnemyAttack enemy damage =
+    mkUtt ( mkS and_Conj ( mkS pastTense ( mkCl ( mkNP the_Quant enemy ) hit_V2 ( mkNP youPl_Pron ) ) ) ( mkS pastTense ( mkCl you_NP lose_V2 ( mkNP a_Quant ( mkNum ( mkCard damage ) ) health_N ) ) ) ) ;
   -- Telling what is in the direction.
-  AWhatIsInDirection object =
-    mkUtt (mkCl object) ;
+  ADirectionQuery direction object =
+    mkUtt ( mkS ( mkCl ( mkNP ( mkNP a_Quant object ) ( S.mkAdv direction ( mkNP youPl_Pron ) ) ) ) ) ;
+  
+  AItemQuery location =
+    mkUtt ( mkS ( mkCl ( mkNP ( C.mkQuant youSg_Pron ) location ) have_V2 ( mkNP this_Quant pluralNum (mkN "item")))) ;
 
   -- Outcome of the fight (Whether enemy won or lost.)
   FightResult enemy outcome =
@@ -94,19 +112,16 @@ lin
   EnemyDescription enemy power itemAttr =
     mkUtt (mkCl (mkNP the_Det enemy) power itemAttr) ;
   
-  
   -- Lexicon
   -- Moving directions
   Forward = mkNP (mkN "forward") ;
   Backward = mkNP (mkN "backward") ;
   Left = mkNP (mkN "left") ;
   Right = mkNP (mkN "right") ;
-
   RoomNumber i = mkNP (mkCN (mkN "room") (NounEng.UsePN (SymbolEng.IntPN i))) ;
-  
   -- Question directions
-  Infront = mkPrep "in front of" ;
-  Behind = mkPrep "behind" ;
+  Infront = in8front_Prep ;
+  Behind = behind_Prep ;
   LeftSide = mkPrep "on the left of";
   RightSide = mkPrep "on the right of";
 
@@ -148,6 +163,8 @@ lin
   Chest = mkCN (mkN "treasure chest") ;
   Wall = mkCN (mkN "wall") ;
   Bag = mkCN (mkN "bag") ;
+  -- Basic nouns 
+  health_N = mkN "health" "health" ;
 
   -- Item modifiers
   Sharp = mkA "sharp" ;
@@ -160,7 +177,6 @@ lin
   Mysterious = mkA "mysterious" ;
   Frozen = mkA "frozen" ;
   ItemMod adjective item = mkCN adjective item ;
-
   -- Room descriptors
   Dark = mkA "dark" ;
   Damp = mkA "damp" ;
@@ -177,13 +193,16 @@ lin
   find_V2 = mkV2 (mkV "find" "found" "found") ;
   put_V2 = mkV2 (mkV "put" "put" "put");
   drop_V2 = mkV2 (mkV "drop") ;
-  loot_V2 = mkV2 (mkV "loot") ;
+  loot_V2 = mkV2 "loot" ;
   describe_V2 = mkV2 (mkV "describe") ;
   attack_V2 = mkV2 (mkV "attack") ;
   move_V2 = mkV2 (mkV "move") ;
   search_V2 = mkV2 (mkV "search") ;
+  hit_V2 = mkV2 (mkV "hit" "hit" "hit") ;
+  lose_V2 = mkV2 (mkV "lose" "lost" "lost") ;
 
   ItemType adj = mkNP (mkCN adj (mkN "items")) ;
   Strong = mkA2 (mkA "strong") (mkPrep "against") ; 
   Weak = mkA2 (mkA "weak") (mkPrep "against") ;
+
 }

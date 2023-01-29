@@ -1,4 +1,4 @@
-abstract RPGChatbot = {
+abstract RPGChatbot = Numeral ** {
 flags startcat = Command ;
 cat
   Question ;
@@ -13,19 +13,20 @@ cat
   Object ;
   Room ;
   RoomAdjective ;
-  ItemList ;
   ItemAttribute ;
   ItemDescription ;
   EnemyAttribute ;
   EnemyPower ;
   Action ;
+  Nouns ;
 
 fun
   -- User actions
 
-  -- What is <in front of me | behind me | on my left | on my right | in my backpack>
-  QWhatIsInDirection : QuestionDirection -> Question ;
-  QWhichItemsAre : Location -> Question ;
+  -- What is <in front of me | behind me | on my left | on my right>
+  QDirectionQuery : QuestionDirection -> Question ;
+  -- What is in my backpack?
+  QItemQuery : Location -> Question ;
   -- Move forward, left, right, backwards.
   Move : MoveDirection -> Command ;
   -- Attack <enemy name> with <item name>.
@@ -41,11 +42,21 @@ fun
   -- Chatbot actions
   FightResult : Enemy -> Outcome -> Result ;
   -- There is a <door, enemy, chest, exit>
-  AWhatIsInDirection : Object -> Result ;
-  -- <Location> contains <list of items>
-  AWhichItemsAre : Location -> ItemList -> Result ;
-  -- Successfully put bread to pants.
-  APut : Item -> Location -> Result ;
+  ADirectionQuery : QuestionDirection -> Object ->  Result ;
+  -- <Location> contains the items: <Python generated list>
+  AItemQuery : Location -> Result ;
+  -- "You moved forward"
+  MoveSuccess : MoveDirection -> Result ;
+  -- "You cannot go there, because there is a boulder"
+  MoveFail : Object -> Result ;
+  -- "You put Scottish kilt to legs"
+  PutSuccess : Item -> Location -> Result ;
+  -- "You cannot put sword there."
+  PutFail : Item -> Result ;
+  -- "You hit the depressed goblin and they lost 10 health"
+  AttackSuccess : Enemy -> Digits -> Result ;
+  -- "The goblin hit you and you lost 10 health"
+  EnemyAttack : Enemy -> Digits -> Result ;
   -- Depressed shark doesn't exist.
   EnemyMissing : Enemy -> Result ;
   -- You found a dull axe.
@@ -64,7 +75,6 @@ fun
   ItemType : ItemAttribute -> ItemDescription ;
   Sharp, Dull, Broken, Legendary, Magical, Shiny, Fiery, Mysterious, Frozen : ItemAttribute ;
   Sword, Axe, Hammer, WizardStaff, Key, ScottishKilt, LeatherSkirt, VikingHelmet, BaseballCap : Item;
-  
   -- Angry dragon, Nice mouse
   EnemyMod : EnemyAttribute -> Enemy -> Enemy ;
   Angry, Happy, Depressed : EnemyAttribute ;
@@ -91,8 +101,8 @@ fun
   Weak, Strong : EnemyPower ;
 
   -- Helper verbs
-  find_V2, loot_V2, drop_V2, put_V2, describe_V2, attack_V2, move_V2, search_V2 : Action ;
-
+  find_V2, loot_V2, drop_V2, put_V2, describe_V2, attack_V2, move_V2, search_V2, hit_V2, lose_V2 : Action ;
+  health_N : Nouns ;
   -- Used for creating numbered rooms such as "Room 15"
   RoomNumber : Int -> Room ;
   
