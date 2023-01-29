@@ -1,1 +1,2 @@
 *.gfo
+__pycache__/
