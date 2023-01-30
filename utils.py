@@ -3,20 +3,32 @@ from colorama import init as colorama_init
 from colorama import Fore, Back, Style
 
 STYLES = {
-    "narrative": Fore.LIGHTBLUE_EX,
-    "pos_result": Fore.GREEN,
-    "neg_result": Fore.YELLOW,
-    "player_hit": Fore.LIGHTBLUE_EX,
-    "enemy_hit": Fore.RED,
-    "program": Fore.LIGHTRED_EX,
+        "narrative":{"fore": Fore.LIGHTGREEN_EX,"back":Back.BLACK},
+        "pos_result": {"fore": Fore.GREEN, "back":""},
+        "neg_result": {"fore": Fore.YELLOW, "back":""},
+        "player_hit": {"fore": Fore.LIGHTBLUE_EX, "back":""},
+        "enemy_hit": {"fore": Fore.RED, "back": ""},
+        "program": {"fore": Fore.LIGHTBLUE_EX, "back":""},
+        "misc": {"fore": Fore.LIGHTYELLOW_EX, "back":""},
+        "help": {"fore": Fore.YELLOW, "back": ""},
 }
 
 colorama_init()
 
 
-def say(text, style):
+def say(text, style, start_lb=False, end_lb=False):
     if style in STYLES:
-        print(f"{STYLES.get(style)}{text}{Style.RESET_ALL}")
+        colors = STYLES.get(style)
+        # Capitalizing the sentence
+        text = text.capitalize()
+        # Constructing the string with colors.
+        phrase = f"{colors.get('back')}{colors.get('fore')}{text}{Style.RESET_ALL}"
+        # If linebreaks need to be printed, then it's printed before the actual phrase.
+        if start_lb:
+            print("\n")
+        print(phrase)
+        if end_lb:
+            print("\n")
     else:
         print(f"{Fore.RED} Invalid text color style. {Style.RESET_ALL}")
 
@@ -27,6 +39,10 @@ def get_random_key(dictionary) -> str:
     rand_key = random.choice(keys)
     return rand_key
 
+def get_random_array_item(array) -> str:
+    """ Select random item from array. """
+    rand_item = array[random.randint(0, len(array) - 1)]
+    return rand_item
 
 # GF categories
 enemies = {
@@ -39,6 +55,7 @@ enemies = {
     "Tiger": {"health": 10, "power": 20},
 }
 enemy_attributes = ["Weak", "Strong"]
+room_attributes = ["Damp", "Bright", "Dark", "Creepy", "Scary", "Peaceful"]
 enemy_modifiers = ["Angry", "Happy", "Furious", "Old"]
 objects = {
     "Boulder": {"lootable": False, "passable": False, "locked": False},

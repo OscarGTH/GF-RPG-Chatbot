@@ -1,34 +1,43 @@
 import sys
 import random
 import pgf
-from utils import say, objects, items, get_random_key, command_tree_examples, enemies
+from utils import (
+    say,
+    objects,
+    items,
+    get_random_key,
+    get_random_array_item,
+    room_attributes,
+    command_tree_examples,
+    enemies,
+)
 
 absmodule = "RPGChatbot"
 AVAILABLE_LANGS = ["Eng"]
+grammar = pgf.readPGF("grammar/" + absmodule + ".pgf")
+language = grammar.languages["RPGChatbotEng"]
 
 
 class Player:
     """Represents the player object in the game."""
 
     def __init__(self) -> None:
-        print("Player created.")
+        pass
 
 
 class Item:
     def __init__(self) -> None:
-        print("Item created.")
+        pass
 
 
 class Enemy:
     def __init__(self) -> None:
-        print("Enemy created")
         self.name = get_random_key(enemies)
         self.attributes = enemies.get(self.name)
 
 
 class Object:
     def __init__(self, object_type=None) -> None:
-        print("Object created")
         # Creating object of specific type.
         if object_type:
             self.name = object_type
@@ -43,10 +52,17 @@ class Room:
     """Represents room object that is inside map."""
 
     def __init__(self, room_number) -> None:
-
-        print(f"Room {room_number} created.")
         self.number = room_number
         self.paths = self.generate_entities()
+        self.attribute = get_random_array_item(room_attributes)
+        self.print_room_intro()
+
+    def print_room_intro(self) -> None:
+        """Prints room entrance phrase in GF."""
+        # Constructing the expression as string.
+        expr_str = f"RoomIntro (RoomNumber {self.number}) {self.attribute}"
+        expr = pgf.readExpr(expr_str)
+        say(language.linearize(expr), "narrative")
 
     def generate_entities(self) -> dict:
         """Generates entities for a room. Entity can be an object or an enemy."""
@@ -63,7 +79,7 @@ class Room:
             else:
                 # If entity does not have to be a Door,
                 # then it is either enemy or an object.
-                if random.randint(0, 100) > 50:
+                if random.randint(0, 100) > 40:
                     entities[name] = Enemy()
                 else:
                     entities[name] = Object()
@@ -75,30 +91,32 @@ class RPGBot:
         """Initializes the chatbot."""
 
         # Initializing the GF and setting the language.
-        grammar = pgf.readPGF("grammar/" + absmodule + ".pgf")
-        langcode = "RPGChatbotEng"
-        if len(sys.argv) > 1:
-            if sys.argv[1] in AVAILABLE_LANGS:
-                langcode = absmodule + sys.argv[1]
-            else:
-                say("Supplied language not available.", "program")
+
         # Initializing game objects
         self.player = Player()
         # Initializing room number as 1
         self.room_number = 1
         # And making the room with the number
         self.room = Room(self.room_number)
-        print(self.room)
-        self.lang = grammar.languages[langcode]
+        # self.print_room_details(self.room)
         self.run_main_loop()
         pass
 
+    def print_room_details(self, room) -> None:
+        paths = room.paths
+        ways = list(paths)
+        for way in ways:
+            entity = paths.get(way)
+            print(type(entity))
+            print(entity.name)
+            print(entity.attributes)
+
     def run_main_loop(self):
         """Contains main input loop of the program."""
-
+        prompt = pgf.readExpr("InputPrompt")
         # Running endless loop
         while True:
-            say("Player input:", "program")
+            say(language.linearize(prompt) + "?", "misc", start_lb=True)
             user_input = input("")
 
             if user_input == "exit":
@@ -134,10 +152,10 @@ class RPGBot:
         try:
             # Category can be used to parse input from different category, such as a question.
             if category:
-                parseresult = self.lang.parse(user_input, cat=pgf.readType(category))
+                parseresult = language.parse(user_input, cat=pgf.readType(category))
             else:
                 # Parsing command category by default
-                parseresult = self.lang.parse(user_input)
+                parseresult = language.parse(user_input)
             prob, tree = parseresult.__next__()
             return tree
         # Catching parse errors
@@ -152,26 +170,28 @@ class RPGBot:
 
     def help(self):
         """Prints out the possible commands."""
-        say("\nExample inputs are shown below: ", "program")
-        say("-"*20, "program")
+        say("Example inputs are shown below: ", "help", start_lb=True)
+        say("-" * 20, "help")
         keys = list(command_tree_examples)
         for key in keys:
-            say("[" + key + "]", "program")
+            say("[" + key + "]", "help")
             for expr_str in command_tree_examples.get(key):
                 expr = pgf.readExpr(expr_str)
-                say(self.lang.linearize(expr), "program")
+                say(language.linearize(expr), "help")
             print("\n")
-        say("-"*20 + "\n", "program")
+        say("-" * 20, "help", end_lb=True)
 
 
 def start_game(args):
     # Initializing library that allows for colored command-line printing.
-
-    say("\nWelcome to GF-RPG Text-based dungeon game!", "program")
+    say("-" * 80, "program")
+    say("Welcome to GF text-based roleplaying game!", "program")
     say(
-        'Write "help" to see the list of the commands and "exit" to quit the program.\n',
+        'Write "help" to see the list of the commands and "exit" to quit the program.',
         "program",
     )
+    say("-" * 80, "program", end_lb=True)
+    # Starting game.
     RPGBot(args)
 
 

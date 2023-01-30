@@ -3,8 +3,10 @@ concrete RPGChatbotEng of RPGChatbot = NumeralEng ** open
   SymbolEng, --IntPN
   SyntaxEng,
   (S=SyntaxEng), -- mkAdv and lots of other small stuff
-  NounEng,
-  (NE=NounEng), -- usePN
+  NounEng, -- usePN
+  (NE=NounEng),
+  LexiconEng, -- now_Adv
+  (L=LexiconEng), 
   ParadigmsEng, --mkN, mkA, mkPrep, mkV2, mkV, mkA2
   ConstructorsEng,
   (C=ConstructorsEng) -- mkQuant
@@ -13,6 +15,7 @@ concrete RPGChatbotEng of RPGChatbot = NumeralEng ** open
 lincat
   Command = Imp ;
   Question = QCl ;
+  ProgramPrompt = QS ;
   Result = Utt ;
   Outcome = V2 ;
   Action = V2 ;
@@ -36,6 +39,7 @@ lin
   Move dir =
     mkImp move_V2 dir;
   Attack enemy item =
+    -- TODO: Using the on the first one forces the usage of the in the second noun.
     -- Without articles, just for quality of life
     mkImp (mkVP (mkVP attack_V2  (mkNP enemy)) (S.mkAdv with_Prep (mkNP item)))
     -- With articles, for grammatical correctness
@@ -114,6 +118,9 @@ lin
 
   EnemyDescription enemy power itemAttr =
     mkUtt (mkCl (mkNP the_Det enemy) power itemAttr) ;
+  
+  InputPrompt =
+    mkQS futureTense ( mkQCl whatPl_IP ( mkClSlash ( mkClSlash youPol_NP ( mkVPSlash (mkV2 "do") ) ) L.now_Adv ) ) ;
   
   -- Lexicon
   -- Moving directions

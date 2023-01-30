@@ -9,6 +9,7 @@ cat
   Item ;
   Location ;
   MoveDirection ;
+  ProgramPrompt ;
   QuestionDirection ;
   Object ;
   Room ;
@@ -67,6 +68,8 @@ fun
   EnemyEncountered : Enemy -> Item -> Result ;
   -- You arrive into a room <number>.
   RoomIntro : Room -> RoomAdjective -> Result ;
+  -- Used to prompt user for input in the program.
+  InputPrompt : ProgramPrompt ;
   
   -- Lexicon
   -- Shiny sword, Dull axe, Sharp bread
