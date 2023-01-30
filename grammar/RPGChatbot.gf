@@ -77,7 +77,7 @@ fun
   Sword, Axe, Hammer, WizardStaff, Key, ScottishKilt, LeatherSkirt, VikingHelmet, BaseballCap : Item;
   -- Angry dragon, Nice mouse
   EnemyMod : EnemyAttribute -> Enemy -> Enemy ;
-  Angry, Happy, Depressed : EnemyAttribute ;
+  Angry, Happy, Furious, Old : EnemyAttribute ;
 
   Orc, Goblin, Dragon, Bandit, Mouse, Tiger, Minotaur : Enemy;
 

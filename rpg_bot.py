@@ -1,23 +1,60 @@
 import sys
+import random
 import pgf
-from utils import say
+from utils import say, objects, items, enemies
 
 absmodule = "RPGChatbot"
 AVAILABLE_LANGS = ["Eng"]
 
+class Player:
+    """ Represents the player object in the game."""
+
+    def __init__(self) -> None:
+        print("Player created.")
+
+class Item:
+
+    def __init__(self) -> None:
+        print("Item created.")
+
+class Enemy:
+
+    def __init__(self) -> None:
+        print("Enemy created")
+
+class Object:
+    
+    def __init__(self) -> None:
+        print("Object created")
+        # Randomly generate some object
+        self.name = objects[random.int(0, len(objects) - 1)]
+
+class Room:
+    """ Represents room object that is inside map. """
+
+    def __init__(self, room_number) -> None:
+        print(f"Room {room_number} created.")
+        self.room = {}
+
+    def add_room_contents(self):
+        doors = {"1": }
+
+
 class RPGBot:
     def __init__(self, args) -> None:
         """ Initializes the chatbot. """
-        
+
         # Initializing the GF and setting the language.
-        grammar = pgf.readPGF(absmodule + ".pgf")
+        grammar = pgf.readPGF("grammar/" + absmodule + ".pgf")
         langcode = "RPGChatbotEng"
         if len(sys.argv) > 1:
           if sys.argv[1] in AVAILABLE_LANGS:
             langcode = absmodule + sys.argv[1]
           else:
             say("Supplied language not available.", "program")
-
+        # Initializing game objects
+        self.player = Player()
+        self.map = Map()
         self.language = grammar.languages[langcode]
         self.run_main_loop()
         pass

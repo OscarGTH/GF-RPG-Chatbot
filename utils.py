@@ -18,3 +18,13 @@ def say(text, style):
         print(f"{STYLES.get(style)}{text}{Style.RESET_ALL}")
     else:
         print(f"{Fore.RED} Invalid text color style. {Style.RESET_ALL}")
+# GF categories
+enemies = ["Minotaur", "Orc", "Goblin", "Dragon", "Bandit", "Mouse", "Tiger"]
+enemy_attributes = ["Weak","Strong"]
+enemy_modifiers = ["Angry","Happy","Furious","Old"]
+objects = ["Boulder","Chest","Bag", "Exit", "Gate", "Wall"]
+items = ["Sword","Axe","Hammer","WizardStaff","Key","ScottishKilt","LeatherSkirt","VikingHelmet","BaseballCap"]
+item_modifiers = ["Sharp","Dull","Broken","Legendary","Magical","Shiny","Fiery","Mysterious","Frozen"]
+locations = ["Backpack","Head","Legs"]
+room_modifiers = ["Damp", "Bright", "Dark", "Creepy", "Scary", "Peaceful"]
+

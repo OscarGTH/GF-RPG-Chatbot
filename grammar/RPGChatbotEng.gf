@@ -1,13 +1,14 @@
 concrete RPGChatbotEng of RPGChatbot = NumeralEng ** open
   Prelude,
-  SymbolEng,
+  SymbolEng, --IntPN
   SyntaxEng,
-  (S=SyntaxEng),
+  (S=SyntaxEng), -- mkAdv and lots of other small stuff
   NounEng,
-  ParadigmsEng,
+  (NE=NounEng), -- usePN
+  ParadigmsEng, --mkN, mkA, mkPrep, mkV2, mkV, mkA2
   ConstructorsEng,
-  (C=ConstructorsEng),
-  IdiomEng in {
+  (C=ConstructorsEng) -- mkQuant
+  in {
 
 lincat
   Command = Imp ;
@@ -49,7 +50,7 @@ lin
   Drop item =
     mkImp drop_V2 (mkNP the_Det item) ;
 
-  -- Moving items around locations (body parts, backpack, and pockets.)
+  -- Moving items around locations (body parts, backpack, and pocketS.)
   Put item location =
       mkImp (mkVP (mkVP put_V2 (mkNP item)) (S.mkAdv to_Prep (mkNP location)))
     | mkImp (mkVP (mkVP put_V2 (mkNP the_Det item)) (S.mkAdv to_Prep (mkNP location))) ;
@@ -118,7 +119,7 @@ lin
   Backward = mkNP (mkN "backward") ;
   Left = mkNP (mkN "left") ;
   Right = mkNP (mkN "right") ;
-  RoomNumber i = mkNP (mkCN (mkN "room") (NounEng.UsePN (SymbolEng.IntPN i))) ;
+  RoomNumber i = mkNP (mkCN (mkN "room") (NE.UsePN (SymbolEng.IntPN i))) ;
   -- Question directions
   Infront = in8front_Prep ;
   Behind = behind_Prep ;
@@ -141,7 +142,7 @@ lin
   -- Enemy modifiers
   Angry = mkA "angry" ;
   Happy = mkA "happy" ;
-  Depressed = mkA "depressed" ;
+  Old = mkA "old" ;
   EnemyMod adjective enemy = mkCN adjective enemy ;
 
   -- Item nouns

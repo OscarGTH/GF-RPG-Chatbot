@@ -1,0 +1,3 @@
+## The following requirements were added by pip freeze:
+colorama==0.4.6
+pgf==1.0
