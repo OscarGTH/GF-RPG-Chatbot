@@ -1,2 +1,3 @@
 *.gfo
 __pycache__/
+*.egg-info

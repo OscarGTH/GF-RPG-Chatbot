@@ -45,12 +45,12 @@ lin
     -- With articles, for grammatical correctness
     | mkImp (mkVP (mkVP attack_V2 (mkNP the_Det enemy)) (S.mkAdv with_Prep (mkNP the_Det item))) ;
 
-  -- Looting enemies
-  Loot enemy =
-    mkImp loot_V2 (mkNP the_Det enemy)
-    | mkImp search_V2 (mkNP the_Det enemy)
-    | mkImp loot_V2 (mkNP enemy)
-    | mkImp search_V2 (mkNP enemy) ;
+  -- Looting enemies and entities
+  Loot entity =
+    mkImp loot_V2 (mkNP the_Det entity)
+    | mkImp search_V2 (mkNP the_Det entity)
+    | mkImp loot_V2 (mkNP entity)
+    | mkImp search_V2 (mkNP entity) ;
 
   -- Dropping items (getting rid of them)
   Drop item =
@@ -152,6 +152,7 @@ lin
   Angry = mkA "angry" ;
   Happy = mkA "happy" ;
   Old = mkA "old" ;
+  Furious = mkA "furious" ;
   EnemyMod adjective enemy = mkCN adjective enemy ;
 
   -- Item nouns
@@ -173,6 +174,7 @@ lin
   Chest = mkCN (mkN "treasure chest") ;
   Wall = mkCN (mkN "wall") ;
   Bag = mkCN (mkN "bag") ;
+  EnemyObject enemy = mkCN enemy ;
   -- Basic nouns 
   health_N = mkN "health" "health" ;
 

@@ -32,7 +32,7 @@ fun
   Move : MoveDirection -> Command ;
   -- Attack <enemy name> with <item name>.
   Attack : Enemy -> Item -> Command ;
-  -- Loot <enemy name>
+  -- Loot <enemy/object name>
   Loot : Object -> Command ;
   -- Put <item name> <to backpack | to feet>
   Put : Item -> Location -> Command ;
@@ -87,7 +87,7 @@ fun
   -- Objects that can exist in some direction.
   -- "There is a door"
   Door, Chest, Boulder, Exit, Gate, Bag, Wall : Object ;
-
+  EnemyObject : Enemy -> Object ;
   -- Locations of where items can be put
   Backpack, Head, Legs : Location ;
 

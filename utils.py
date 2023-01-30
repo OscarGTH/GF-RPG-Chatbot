@@ -50,7 +50,7 @@ enemies = {
     "Orc": {"health": 15, "power": 8},
     "Goblin": {"health": 5, "power": 5},
     "Dragon": {"health": 60, "power": 25},
-    "Bandit": {"health": 12, "powr": 15},
+    "Bandit": {"health": 12, "power": 15},
     "Mouse": {"health": 3, "power": 1},
     "Tiger": {"health": 10, "power": 20},
 }
@@ -66,27 +66,28 @@ objects = {
     "Wall": {"lootable": False, "passable": False, "locked": False},
     "Door": {"lootable": False, "passable": True, "locked": False},
 }
+# Items have attack power and health attribute, that the wearer gets as a bonus.
 items = {
-    "Sword": {"power": 10, "fits": ["Backpack"]},
-    "Axe": {"power": 10, "fits": ["Backpack"]},
-    "Hammer": {"power": 10, "fits": ["Backpack"]},
-    "WizardStaff": {"power": 10, "fits": ["Backpack"]},
-    "Key": {"power": 10, "fits": ["Backpack"]},
-    "ScottishKilt": {"power": 10, "fits": ["Backpack", "Legs"]},
-    "LeatherSkirt": {"power": 10, "fits": ["Backpack", "Legs"]},
-    "VikingHelmet": {"power": 10, "fits": ["Backpack", "Head"]},
-    "BaseballCap": {"power": 10, "fits": ["Backpack", "Head"]},
+    "Sword": {"power": 13, "health": 0, "fits": ["Backpack"]},
+    "Axe": {"power": 18, "health": 0, "fits": ["Backpack"]},
+    "Hammer": {"power": 15, "health": 0, "fits": ["Backpack"]},
+    "WizardStaff": {"power": 20, "health": 0, "fits": ["Backpack"]},
+    "Key": {"power": 1, "health": 0, "fits": ["Backpack"]},
+    "ScottishKilt": {"power": 5, "health": 25,  "fits": ["Backpack", "Legs"]},
+    "LeatherSkirt": {"power": 2, "health": 15, "fits": ["Backpack", "Legs"]},
+    "VikingHelmet": {"power": 12, "health": 10, "fits": ["Backpack", "Head"]},
+    "BaseballCap": {"power": 6,  "health": 8, "fits": ["Backpack", "Head"]},
 }
 item_modifiers = {
-    "Sharp": lambda power : 10 + power,
-    "Dull": lambda power : power - 8,
-    "Broken": lambda power : power - 15,
-    "Legendary": lambda power : power * 4,
-    "Magical": lambda power : power * 2,
-    "Shiny": lambda power : power + 15 ,
-    "Fiery": lambda power : power + 20,
-    "Mysterious": lambda power : power * 3,
-    "Frozen": lambda power : power + 25,
+    "Sharp": lambda power, health : (10 + power, health),
+    "Dull": lambda power, health : (power - 8, health) ,
+    "Broken": lambda power, health : (power - 15, health - 10),
+    "Legendary": lambda power, health : (power * 4, health * 4),
+    "Magical": lambda power, health : (power * 2, health * 2),
+    "Shiny": lambda power, health : (power + 15 , health + 15),
+    "Fiery": lambda power, health : (power + 20, health + 5),
+    "Mysterious": lambda power, health : (power * 3, health + 30),
+    "Frozen": lambda power, health : (power + 25, health + 10),
 }
 locations = ["Backpack", "Head", "Legs"]
 room_modifiers = ["Damp", "Bright", "Dark", "Creepy", "Scary", "Peaceful"]
