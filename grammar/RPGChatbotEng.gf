@@ -44,7 +44,9 @@ lin
   -- Looting enemies
   Loot enemy =
     mkImp loot_V2 (mkNP the_Det enemy)
-    | mkImp search_V2 (mkNP the_Det enemy) ;
+    | mkImp search_V2 (mkNP the_Det enemy)
+    | mkImp loot_V2 (mkNP enemy)
+    | mkImp search_V2 (mkNP enemy) ;
 
   -- Dropping items (getting rid of them)
   Drop item =
