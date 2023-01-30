@@ -5,6 +5,7 @@ from utils import (
     say,
     objects,
     items,
+    item_modifiers,
     get_random_key,
     get_random_array_item,
     room_attributes,
@@ -22,18 +23,91 @@ class Player:
     """Represents the player object in the game."""
 
     def __init__(self) -> None:
+        self.inventory = self.initialize_inventory()
+        # Setting base stats.
+        # TODO: Add randomisation and perhaps more attributes? E.g stamina, sneak, charm, magic
+        self.power = 10
+        self.health = 25
+
+    def initialize_inventory(self) -> dict:
+        inventory = {"Backpack": [], "Head": [], "Legs": []}
+        return inventory
+
+    def get_subinventory_items(self, subinventory) -> dict:
+        """ Returns items from a specific subinventory. """
+        pass
+
+    def is_item_in_inventory(self, item) -> bool:
+        """Checking if item is actually in inventory.
+        Used for making sure that player cannot use items that they do not have.
+        """
+        pass
+
+    def add_item_to_subinventory(self, item, subinventory) -> bool:
+        """Adds an item to sub inventory if possible.
+        Item name and subinventory is passed as arguments.
+        """
         pass
 
 
 class Item:
-    def __init__(self) -> None:
-        pass
+    """ Class that represents a single item. """
+
+    def __init__(self, item_modifier=None, item_type=None) -> None:
+        # Generating item
+        self.name, self.base_name, self.modifier = self.generate_item(item_modifier, item_type)
+        self.attributes = self.calculate_item_power()
+
+    def generate_item(self, item_type, item_modifier) -> tuple:
+        """ Generates an item either randomly or
+         of a specific type determined by item_type argument"""
+        base_name = item_type if item_type else get_random_key(items)
+        if item_modifier and item_modifier in item_modifiers:
+            modifier = item_modifier
+        else:
+            # Generating item modifier on a 40% chance.
+            if (random.randint(0,100) < 40):
+                # Generating random modifier
+                modifier = get_random_key(item_modifiers)
+                # To make legendary more rare, if it is rolled, another random chance has to be passed
+                # or the modifier will be re-rolled.
+                if modifier == "Legendary" and random.randint(0,10) < 5:
+                    modifier = get_random_key(item_modifiers)
+        # If in the end modifier exists, the item's name will be different.
+        if modifier:
+            # Constructing item name with modifier
+            name = f"(ItemMod {modifier} {name})"
+        else:
+            name = base_name
+        return name, base_name, modifier
+    
+    def calculate_item_power(self) -> int:
+        """ Calculates the power of an item as integer. """
+        base_attrs = items.get(self.base_name)
+        modifier_formula = item_modifiers.get(self.modifier)
+        # Items with 0 power cannot be enhanced with modifiers
+        if base_attrs.power != 0:
+            # Calling the modifier formula function and passing item base power to the function.
+            power = modifier_formula(base_attrs.power)
+        return power
+
+        
+
+
+        
 
 
 class Enemy:
     def __init__(self) -> None:
         self.name = get_random_key(enemies)
         self.attributes = enemies.get(self.name)
+        self.item = self.generate_primary_item()
+
+    def generate_primary_item(self):
+        """ Generates an item for an enemy that is equipped.
+        """
+        
+        
 
 
 class Object:
@@ -53,21 +127,27 @@ class Room:
 
     def __init__(self, room_number) -> None:
         self.number = room_number
+        # Generating entities eg. different entities for each way.
         self.paths = self.generate_entities()
+        # Room attribute is an adjective that describes the room.
+        # TODO: Making room attribute buff/nerf monsters/player.
         self.attribute = get_random_array_item(room_attributes)
-        self.print_room_intro()
+        self.tell_room_intro()
 
     def print_room_intro(self) -> None:
         """Prints room entrance phrase in GF."""
         # Constructing the expression as string.
         expr_str = f"RoomIntro (RoomNumber {self.number}) {self.attribute}"
+        # Reading the expression
         expr = pgf.readExpr(expr_str)
+        # Linearizing the expression which turns the expression into text string.
         say(language.linearize(expr), "narrative")
 
     def generate_entities(self) -> dict:
         """Generates entities for a room. Entity can be an object or an enemy."""
 
         entities = {}
+        # Possible directions in GF expressions format
         dir_names = ["Infront", "Behind", "LeftSide", "RightSide"]
         # Randomly selecting a direction of where the door is.
         # It has to be forced, so player cannot get stuck.

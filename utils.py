@@ -77,17 +77,17 @@ items = {
     "VikingHelmet": {"power": 10, "fits": ["Backpack", "Head"]},
     "BaseballCap": {"power": 10, "fits": ["Backpack", "Head"]},
 }
-item_modifiers = [
-    "Sharp",
-    "Dull",
-    "Broken",
-    "Legendary",
-    "Magical",
-    "Shiny",
-    "Fiery",
-    "Mysterious",
-    "Frozen",
-]
+item_modifiers = {
+    "Sharp": lambda power : 10 + power,
+    "Dull": lambda power : power - 8,
+    "Broken": lambda power : power - 15,
+    "Legendary": lambda power : power * 4,
+    "Magical": lambda power : power * 2,
+    "Shiny": lambda power : power + 15 ,
+    "Fiery": lambda power : power + 20,
+    "Mysterious": lambda power : power * 3,
+    "Frozen": lambda power : power + 25,
+}
 locations = ["Backpack", "Head", "Legs"]
 room_modifiers = ["Damp", "Bright", "Dark", "Creepy", "Scary", "Peaceful"]
 # Used in help command by linearizing these to show what can be said.
