@@ -93,9 +93,21 @@ lin
     mkUtt ( mkS negativePol ( mkCl ( mkNP youSg_Pron ) ( mkVP ( mkVP ( mkVP can8know_VV ( mkVP (mkV "go") ) ) there7to_Adv ) ( S.mkAdv because_Subj ( mkS ( mkCl ( mkNP a_Quant object ) ) ) ) ) ) ) ;
   AttackSuccess enemy damage =
     mkUtt ( mkS and_Conj ( mkS ( mkCl ( mkNP youPol_Pron ) hit_V2 ( mkNP the_Quant enemy ) ) ) ( mkS pastTense ( mkCl ( mkNP it_Pron ) lose_V2 ( mkNP a_Quant ( mkNum ( mkCard damage ) ) health_N ) ) ) ) ;
-  -- Telling that enemy doesn't exist.
-  EnemyMissing enemy = mkUtt (mkS negativePol (mkCl (mkNP enemy) (mkV "exist"))) ;
+  
+  PlayerHealth health =
+    mkUtt ( mkS ( mkCl ( mkNP youPol_Pron ) have_V2 ( mkNP a_Quant ( mkNum ( mkCard health ) ) ( mkCN ( mkCN health_N ) ( mkNP ( mkDet a_Quant pluralNum left_Ord ) ) ) ) ) ) ;
 
+  EnemyHealth enemy health = 
+    mkUtt ( mkS ( mkCl ( mkNP the_Quant enemy ) have_V2 ( mkNP a_Quant ( mkNum ( mkCard health ) ) ( mkCN ( mkCN health_N ) ( mkNP ( mkDet a_Quant pluralNum left_Ord ) ) ) ) ) ) ;
+
+  -- Telling that object doesn't exist.
+  ObjectMissing object = mkUtt (mkS negativePol (mkCl (mkNP object) (mkV "exist"))) ;
+  
+  -- Telling user that an action cannot be done at the moment.
+  InvalidAction =
+     mkUtt ( mkS negativePol ( mkCl ( mkNP youPol_Pron ) ( mkVP ( mkVP ( mkVPSlash can8know_VV ( mkVPSlash do_V2 ) ) ( mkNP ( mkDet that_Quant right_Ord ) ) ) L.now_Adv ) ) ) ;
+  ItemMissing item = 
+    mkUtt ( mkS negativePol ( mkCl ( mkNP item ) ( mkVP ( mkVP can8know_VV ( passiveVP find_V2 ) ) ( S.mkAdv from_Prep ( mkNP ( mkQuant youPl_Pron ) inventory_N ) ) ) ) ) ;
   -- Telling that enemy has been encountered.
   EnemyEncountered enemy item = 
     mkUtt (mkCl (mkCN enemy (S.mkAdv with_Prep (mkNP a_Det item)))) ;
@@ -122,6 +134,16 @@ lin
   InputPrompt =
     mkQS futureTense ( mkQCl whatPl_IP ( mkClSlash ( mkClSlash youPol_NP ( mkVPSlash (mkV2 "do") ) ) L.now_Adv ) ) ;
   
+  BattlePrompt =
+    mkQS ( mkQCl ( mkIComp whatPl_IP ) ( mkNP ( mkQuant youPl_Pron ) ( mkCN ( mkAP (mkA "next") ) ( mkCN action_N ) ) ) ) ;
+
+  -- Enemy death announcement.
+  EnemyDeath enemy =
+    mkUtt ( mkS pastTense ( mkCl ( mkNP enemy  ) die_V ) ) ;
+  -- Player death text.
+  PlayerDeath =
+    mkUtt ( mkS pastTense ( mkCl ( mkNP youPol_Pron ) die_V ) ) ;
+
   -- Lexicon
   -- Moving directions
   Forward = mkNP (mkN "forward") ;
@@ -177,6 +199,8 @@ lin
   EnemyObject enemy = mkCN enemy ;
   -- Basic nouns 
   health_N = mkN "health" "health" ;
+  action_N = mkN "action" ;
+  inventory_N = mkN "inventory" ;
 
   -- Item modifiers
   Sharp = mkA "sharp" ;
@@ -196,6 +220,7 @@ lin
   Creepy = mkA "creepy..." ; 
   Scary = mkA "scary" ;
   Peaceful = mkA "peaceful" ;
+  
 
   -- Fight outcome verbs
   Win = mkV2 (mkV "win" "won" "won") ;

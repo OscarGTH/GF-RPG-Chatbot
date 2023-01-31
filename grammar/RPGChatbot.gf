@@ -58,8 +58,14 @@ fun
   AttackSuccess : Enemy -> Digits -> Result ;
   -- "The goblin hit you and you lost 10 health"
   EnemyAttack : Enemy -> Digits -> Result ;
-  -- Depressed shark doesn't exist.
-  EnemyMissing : Enemy -> Result ;
+  -- "You have 10 health left."
+  PlayerHealth : Digits -> Result ;
+  -- "The angry goblin has 15 health left"
+  EnemyHealth : Enemy -> Digits -> Result ; 
+  EnemyDeath : Enemy -> Result ;
+  PlayerDeath : Result ;
+  -- Old tiger|door doesn't exist.
+  ObjectMissing : Object -> Result ;
   -- You found a dull axe.
   LootSuccess : Item -> Result ;
   -- Dragon is weak against sharp items.
@@ -70,6 +76,12 @@ fun
   RoomIntro : Room -> RoomAdjective -> Result ;
   -- Used to prompt user for input in the program.
   InputPrompt : ProgramPrompt ;
+  -- Used to prompt user for attack command in battle.
+  BattlePrompt : ProgramPrompt ;
+  InvalidAction : Result ;
+  ItemMissing : Item -> Result ;
+
+
   
   -- Lexicon
   -- Shiny sword, Dull axe, Sharp bread
@@ -105,7 +117,7 @@ fun
 
   -- Helper verbs
   find_V2, loot_V2, drop_V2, put_V2, describe_V2, attack_V2, move_V2, search_V2, hit_V2, lose_V2 : Action ;
-  health_N : Nouns ;
+  health_N, action_N, inventory_N : Nouns ;
   -- Used for creating numbered rooms such as "Room 15"
   RoomNumber : Int -> Room ;
   
