@@ -1,37 +1,55 @@
 import random
+import sys
 from colorama import init as colorama_init
 from colorama import Fore, Back, Style
+import time
 
 STYLES = {
-    "narrative": {"fore": Fore.LIGHTGREEN_EX, "back": Back.BLACK},
-    "pos_result": {"fore": Fore.CYAN, "back": ""},
-    "neg_result": {"fore": Fore.YELLOW, "back": ""},
-    "player_hit": {"fore": Fore.LIGHTMAGENTA_EX, "back": ""},
-    "enemy_hit": {"fore": Fore.RED, "back": ""},
-    "program": {"fore": Fore.LIGHTBLUE_EX, "back": ""},
-    "misc": {"fore": Fore.LIGHTYELLOW_EX, "back": ""},
-    "help": {"fore": Fore.YELLOW, "back": ""},
+    "narrative": {"fore": Fore.LIGHTGREEN_EX, "back": Back.BLACK, "delay": True},
+    "pos_result": {"fore": Fore.CYAN, "back": "", "delay": True},
+    "neg_result": {"fore": Fore.YELLOW, "back": "", "delay": True},
+    "player_hit": {"fore": Fore.LIGHTMAGENTA_EX, "back": "", "delay": True},
+    "enemy_hit": {"fore": Fore.RED, "back": "", "delay": True},
+    "program": {"fore": Fore.LIGHTBLUE_EX, "back": "", "delay": False},
+    "misc": {"fore": Fore.LIGHTYELLOW_EX, "back": "", "delay": True},
+    "help": {"fore": Fore.YELLOW, "back": "", "delay": False},
 }
 
 colorama_init()
 
 
-def say(text, style, start_lb=False, end_lb=False, capitalize=True):
+def say(text, style, start_lb=False, end_lb=True, capitalize=True):
     if style in STYLES:
-        colors = STYLES.get(style)
+        text_style = STYLES.get(style)
         if capitalize:
             # Capitalizing the sentence
             text = text.capitalize()
-        # Constructing the string with colors.
-        phrase = f"{colors.get('back')}{colors.get('fore')}{text}{Style.RESET_ALL}"
         # If linebreaks need to be printed, then it's printed before the actual phrase.
         if start_lb:
-            print("\n")
-        print(phrase)
+            text = "\n" + text
         if end_lb:
-            print("\n")
+            text = text + "\n"
+        print_phrase(text, text_style)
     else:
         print(f"{Fore.RED} Invalid text color style. {Style.RESET_ALL}")
+
+
+def print_phrase(phrase, style):
+    """Prints a phrase one key at a time with small delay."""
+
+    if style.get("delay") is not False:
+        for character in phrase:
+            sys.stdout.write(
+                f"{style.get('back')}{style.get('fore')}{character}{Style.RESET_ALL}"
+            )
+            sys.stdout.flush()
+            if random.randint(0, 10) == 9:
+                seconds = "0." + str(random.randrange(1, 2, 1))
+            else:
+                seconds = "0.0" + str(random.randrange(5, 30, 1))
+            time.sleep(float(seconds))
+    else:
+        print(f"{style.get('back')}{style.get('fore')}{phrase}{Style.RESET_ALL}")
 
 
 def get_random_key(dictionary) -> str:
@@ -71,6 +89,13 @@ def expr_to_str(expr_type, expr) -> str:
 
 
 # GF categories
+# Path directions are named differently than moving directions, so lookup table needs to exist.
+move_directions = {
+    "Left": "LeftSide",
+    "Right": "RightSide",
+    "Forward": "Infront",
+    "Backward": "Behind",
+}
 enemies = {
     "Minotaur": {"health": 40, "power": 25},
     "Orc": {"health": 20, "power": 8},
@@ -88,7 +113,7 @@ objects = {
     "Chest": {"lootable": True, "passable": True, "locked": True},
     "Bag": {"lootable": True, "passable": True, "locked": False},
     "Exit": {"lootable": False, "passable": True, "locked": False},
-    "Gate": {"lootable": False, "passable": False, "locked": True},
+    "Gate": {"lootable": False, "passable": True, "locked": True},
     "Wall": {"lootable": False, "passable": False, "locked": False},
     "Door": {"lootable": False, "passable": True, "locked": False},
 }

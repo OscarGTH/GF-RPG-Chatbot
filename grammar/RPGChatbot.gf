@@ -62,10 +62,10 @@ fun
   PlayerHealth : Digits -> Result ;
   -- "The angry goblin has 15 health left"
   EnemyHealth : Enemy -> Digits -> Result ; 
-  EnemyDeath : Enemy -> Result ;
   PlayerDeath : Result ;
   -- Old tiger|door doesn't exist.
   ObjectMissing : Object -> Result ;
+  ObjectLocked : Object -> Result ;
   -- You found a dull axe.
   LootSuccess : Item -> Result ;
   -- Dragon is weak against sharp items.
@@ -89,7 +89,7 @@ fun
   -- Shiny items, Dull items
   ItemType : ItemAttribute -> ItemDescription ;
   Sharp, Dull, Broken, Legendary, Magical, Shiny, Fiery, Mysterious, Frozen : ItemAttribute ;
-  Sword, Axe, Hammer, WizardStaff, Key, ScottishKilt, LeatherSkirt, VikingHelmet, BaseballCap : Item;
+  Sword, Axe, Hammer, WizardStaff, Key, ScottishKilt, LeatherSkirt, VikingHelmet, BaseballCap, UndyingTotem : Item;
   -- Angry dragon, Nice mouse
   EnemyMod : EnemyAttribute -> Enemy -> Enemy ;
   Angry, Happy, Furious, Old : EnemyAttribute ;
@@ -116,7 +116,7 @@ fun
   Weak, Strong : EnemyPower ;
 
   -- Helper verbs
-  find_V2, loot_V2, drop_V2, put_V2, describe_V2, attack_V2, move_V2, search_V2, hit_V2, lose_V2 : Action ;
+  loot_V2, drop_V2, describe_V2, attack_V2, move_V2, lock_V2, search_V2 : Action ;
   health_N, action_N, inventory_N : Nouns ;
   -- Used for creating numbered rooms such as "Room 15"
   RoomNumber : Int -> Room ;

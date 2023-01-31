@@ -14,6 +14,7 @@ from utils import (
     int_to_digit,
     expr_to_str,
     command_tree_examples,
+    move_directions,
     enemies,
 )
 
@@ -52,10 +53,7 @@ class Player:
 
     def get_subinventory_items(self, subinventory) -> list:
         """Returns all items from a specific subinventory."""
-        items = [
-            inv_item
-            for inv_item in self.inventory[subinventory]
-        ]
+        items = [inv_item for inv_item in self.inventory[subinventory]]
         return items
 
     def is_item_in_inventory(self, item) -> bool:
@@ -170,7 +168,7 @@ class Enemy:
 
         item = None
         # Generating item for the enemy by chance or by forcing it through argument.
-        if random.randint(0, 100) > 65 or allocate_item:
+        if random.randint(0, 100) > 10 or allocate_item:
             item = Item()
         return item
 
@@ -229,16 +227,11 @@ class Room:
         # Constructing the expression as string.
         expr_str = f"RoomIntro (RoomNumber {self.number}) {self.attribute}"
         # Linearizing the expression which turns the expression into text string.
-        say(language.linearize(pgf.readExpr(expr_str)), "narrative")
+        say(language.linearize(pgf.readExpr(expr_str)), "narrative", start_lb=True)
 
     def get_entity_at_direction(self, direction) -> object:
         """Returns the entity that is in the direction of the argument."""
-        entity = self.paths.get(direction)
-        # Enemies as objects need to be wrapped in enemyobject wrapper.
-        if entity.__class__.__name__ == "Enemy":
-            return f"(EnemyObject {entity.name})"
-        else:
-            return entity.name
+        return self.paths.get(direction)
 
     def get_enemy_by_name(self, name) -> object:
         """Returns entity reference by name."""
@@ -282,6 +275,7 @@ class Room:
             if dir_names[door_dir] == name:
                 entities[name] = Object(object_type="Door")
             else:
+                # List of entities that exist in the room.
                 existing_entities = [ent.name for ent in entities.values()]
                 # If entity does not have to be a Door,
                 # then it is either enemy or an object.
@@ -299,7 +293,6 @@ class Room:
     def generate_unique_entity(self, existing_ents, entity_type):
         """Generates unique entity that is not already in any of the directions."""
 
-        # Making list of entities that exist already.
         # Looping until unique entity is generated.
         while True:
             if entity_type == "Enemy":
@@ -328,7 +321,7 @@ class RPGBot:
         self.room_number = 1
         # And making the room with the number
         self.room = Room(self.room_number)
-        #self.print_room_details(self.room)
+        # self.print_room_details(self.room)
         self.run_main_loop()
         pass
 
@@ -407,15 +400,43 @@ class RPGBot:
     def move(self, args):
         """Command for player movement."""
 
-        direction = str(args[0])
-        if direction == "Forward":
-            say("Moving forward", "narrative")
-        elif direction == "Left":
-            say("Moving left", "narrative")
-        elif direction == "Right":
-            say("Moving right", "narrative")
+        move_direction = str(args[0])
+        room_direction = move_directions.get(move_direction)
+        entity = self.room.get_entity_at_direction(room_direction)
+        if entity.__class__.__name__ == "Object":
+            lootable = entity.attributes.get("lootable")
+            passable = entity.attributes.get("passable")
+            locked = entity.attributes.get("locked")
+            # Chests
+            if lootable and passable:
+                say(
+                    self.to_lin(f"MoveSuccess {move_direction}"),
+                    "pos_result",
+                    end_lb=True,
+                )
+                self.change_room()
+            # Doors, gates, and exits etc.
+            if not lootable and passable:
+                if locked:
+                    say(self.to_lin(f"ObjectLocked {entity.name}"), "neg_result")
+                else:
+                    say(
+                        self.to_lin(f"MoveSuccess {move_direction}"),
+                        "pos_result",
+                        end_lb=True,
+                    )
+                    self.change_room()
+            # Boulders etc.
+            if not passable:
+                say(self.to_lin(f"MoveFail {entity.name}"), "neg_result")
+        # Enemies
         else:
-            say("Moving backward.", "narrative")
+            say(self.to_lin(f"MoveFail (EnemyObject {entity.name})"), "neg_result")
+
+    def change_room(self):
+        """Changes the room that the player is in."""
+        self.room_number = self.room_number + 1
+        self.room = Room(self.room_number)
 
     def attack(self, args):
         """Command for player attack action."""
@@ -458,46 +479,52 @@ class RPGBot:
                 while attack_not_done:
                     say(
                         language.linearize(pgf.readExpr("BattlePrompt")) + "?",
-                        "misc", start_lb=True
+                        "misc",
+                        start_lb=True,
                     )
                     # Receiving command from player.
-                    battle_input = input("")
+                    battle_input = input("\n")
                     # Player can show available commands.
                     if battle_input == "help":
                         self.help()
                     elif battle_input == "exit":
                         sys.exit(1)
                     else:
-                        command = self.parse_command(battle_input)
-                        base_fun, args = command.unpack()
-                        # Process "Attack" command here to prevent starting the battle again.
-                        if base_fun == "Attack":
-                            # Making sure player is attacking the same enemy.
-                            if expr_to_str("EnemyMod", args[0]) == enemy_name:
-                                # If attack succeeds, then attack is marked as done.
-                                if self.do_player_attack(args[1], enemy):
-                                    attack_not_done = False
+                        if command := self.parse_command(battle_input):
+                            base_fun, args = command.unpack()
+                            # Process "Attack" command here to prevent starting the battle again.
+                            if base_fun == "Attack":
+                                # Making sure player is attacking the same enemy.
+                                if expr_to_str("EnemyMod", args[0]) == enemy_name:
+                                    # If attack succeeds, then attack is marked as done.
+                                    if self.do_player_attack(args[1], enemy):
+                                        attack_not_done = False
+                                    else:
+                                        # Going back to the beginning of the player battle input loop,
+                                        # as the used weapon did not exist.
+                                        pass
                                 else:
-                                    # Going back to the beginning of the player battle input loop,
-                                    # as the used weapon did not exist.
+                                    # TODO: say that player is already in a battle with enemy
+                                    say(
+                                        "You are already fighting another enemy.",
+                                        "narrative",
+                                    )
                                     pass
                             else:
-                                # TODO: say that player is already in a battle with enemy
-                                say(
-                                    "You are already fighting another enemy.",
-                                    "narrative",
+                                # Processing other commands but blocking moving and looting while fighting.
+                                self.process_command(
+                                    command, blocked_commands=["Move", "Loot"]
                                 )
-                                pass
-                        else:
-                            # Processing other commands but blocking moving and looting while fighting.
-                            self.process_command(
-                                command, blocked_commands=["Move", "Loot"]
-                            )
             else:
-                say(language.linearize(pgf.readExpr("PlayerDeath")) + ".", "neg_result")
+                say(
+                    self.to_lin(f"FightResult {enemy.name} Win") + ".",
+                    "neg_result",
+                    end_lb=True,
+                )
+                say(self.to_lin("PlayerDeath") + ".", "neg_result")
                 # Ending program.
                 sys.exit(1)
-        say(language.linearize(pgf.readExpr(f"EnemyDeath {enemy.name}")) + ".", "pos_result")
+        say(self.to_lin(f"FightResult {enemy.name} Lose") + ".", "neg_result")
         # Looting the enemy's items.
         self.loot_enemy(enemy)
         # Removing the enemy after it has died.
@@ -505,7 +532,7 @@ class RPGBot:
         return True
 
     def loot_enemy(self, enemy):
-        """ Handles  the process of looting the enemy after it has died. """
+        """Handles  the process of looting the enemy after it has died."""
 
         # Getting possible loot that the item left behind.
         loot = enemy.item
@@ -513,18 +540,25 @@ class RPGBot:
             # Adding item to player's backpack
             self.player.add_item_to_subinventory(loot, "Backpack")
             # Telling that an item was found.
-            say(language.linearize(pgf.readExpr(f"LootSuccess {loot.name}")), "pos_result")
+            say(
+                language.linearize(pgf.readExpr(f"LootSuccess {loot.name}")),
+                "pos_result",
+                start_lb=True,
+            )
 
     def do_enemy_attack(self, enemy) -> None:
         """Performs attack towards player."""
         attack_power = enemy.power
         # Randomizing damage in a range.
         realized_power = random.randint(attack_power - 5, attack_power + 5)
-        enemy_attack_expr = pgf.readExpr(
-            f"EnemyAttack {enemy.name} {int_to_digit(realized_power)}"
-        )
+        if realized_power < 0:
+            realized_power = 0
         # Linearizing the expression
-        say(language.linearize(enemy_attack_expr), "enemy_hit", start_lb=True)
+        say(
+            self.to_lin(f"EnemyAttack {enemy.name} {int_to_digit(realized_power)}"),
+            "enemy_hit",
+            start_lb=True,
+        )
         # Reducing player health
         self.player.reduce_player_health(realized_power)
 
@@ -539,24 +573,28 @@ class RPGBot:
             power = self.player.get_attack_power_with_weapon(weapon)
             # Real attack power is randomized in range of attack power +- 3.
             realized_power = random.randint(power - 3, power + 3)
-            player_attack_expr = pgf.readExpr(
-                f"AttackSuccess {enemy.name} {int_to_digit(realized_power)}"
+            say(
+                self.to_lin(
+                    f"AttackSuccess {enemy.name} {int_to_digit(realized_power)}"
+                ),
+                "player_hit",
             )
-            say(language.linearize(player_attack_expr), "player_hit")
             enemy.reduce_enemy_health(realized_power)
             if enemy.health > 0:
                 # Announcing enemy health after player attack.
                 say(
-                    language.linearize(
-                        pgf.readExpr(
-                            f"EnemyHealth {enemy.name} {int_to_digit(enemy.health)}"
-                        )
+                    self.to_lin(
+                        f"EnemyHealth {enemy.name} {int_to_digit(enemy.health)}"
                     ),
                     "narrative",
                 )
             return True
         else:
-            say(language.linearize(pgf.readExpr(f"ItemMissing {weapon}")), "neg_result")
+            say(
+                self.to_lin(f"ItemMissing {weapon}"),
+                "neg_result",
+                capitalize=False,
+            )
             return False
 
     def loot(self, args):
@@ -596,24 +634,38 @@ class RPGBot:
 
         direction = str(args[0])
         entity = self.room.get_entity_at_direction(direction)
+        if entity.__class__.__name__ == "Enemy":
+            ent_name = f"(EnemyObject {entity.name})"
+            # If enemy has item, then a different answer is given.
+            if entity.item:
+                say(
+                    self.to_lin(f"EnemyEncountered {entity.name} {entity.item.name}"),
+                    "narrative",
+                )
+                return
+        else:
+            ent_name = entity.name
         say(
-            language.linearize(pgf.readExpr(f"ADirectionQuery {direction} {entity}")),
+            self.to_lin(f"ADirectionQuery {direction} {ent_name}"),
             "narrative",
         )
+        return
 
     def item_query(self, args):
         """Command for querying about inventory items."""
         location = str(args[0])
-        say(language.linearize(pgf.readExpr(f"AItemQuery {location}")) + ":", "pos_result")
+        say(
+            language.linearize(pgf.readExpr(f"AItemQuery {location}")) + ":",
+            "pos_result",
+        )
         items = self.player.get_subinventory_items(location)
         # If items are in subinventory, then we print them in a loop.
         if items:
             for item in items:
                 # Printing each item without capitalization, because items names should always be lowercase.
-                say(language.linearize(pgf.readExpr(f"{item.name}")), "pos_result", capitalize=False)
+                say("- " + self.to_lin(f"{item.name}"), "pos_result", capitalize=False)
         else:
             say("-", "pos_result")
-
 
     def help(self):
         """Prints out the possible commands."""
@@ -627,6 +679,10 @@ class RPGBot:
                 say(language.linearize(expr), "help")
             print("\n")
         say("-" * 20, "help", end_lb=True)
+
+    def to_lin(self, expression) -> str:
+        """Reads expression string and returns it as linearized string."""
+        return language.linearize(pgf.readExpr(expression))
 
 
 def start_game(args):

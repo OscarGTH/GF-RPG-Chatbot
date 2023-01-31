@@ -103,16 +103,22 @@ lin
   -- Telling that object doesn't exist.
   ObjectMissing object = mkUtt (mkS negativePol (mkCl (mkNP object) (mkV "exist"))) ;
   
+  -- Telling that object is locked.
+  ObjectLocked object =  mkUtt ( mkS ( mkCl ( mkNP object ) ( passiveVP lock_V2 ) ) ) ;
+  
   -- Telling user that an action cannot be done at the moment.
   InvalidAction =
      mkUtt ( mkS negativePol ( mkCl ( mkNP youPol_Pron ) ( mkVP ( mkVP ( mkVPSlash can8know_VV ( mkVPSlash do_V2 ) ) ( mkNP ( mkDet that_Quant right_Ord ) ) ) L.now_Adv ) ) ) ;
+  
   ItemMissing item = 
-    mkUtt ( mkS negativePol ( mkCl ( mkNP item ) ( mkVP ( mkVP can8know_VV ( passiveVP find_V2 ) ) ( S.mkAdv from_Prep ( mkNP ( mkQuant youPl_Pron ) inventory_N ) ) ) ) ) ;
+    mkUtt ( mkS negativePol ( mkCl ( mkNP item ) ( mkVP ( mkVP can8know_VV ( passiveVP find_V2 ) ) ( S.mkAdv from_Prep ( mkNP ( C.mkQuant youPl_Pron ) inventory_N ) ) ) ) ) ;
   -- Telling that enemy has been encountered.
   EnemyEncountered enemy item = 
     mkUtt (mkCl (mkCN enemy (S.mkAdv with_Prep (mkNP a_Det item)))) ;
+
   EnemyAttack enemy damage =
     mkUtt ( mkS and_Conj ( mkS pastTense ( mkCl ( mkNP the_Quant enemy ) hit_V2 ( mkNP youPl_Pron ) ) ) ( mkS pastTense ( mkCl you_NP lose_V2 ( mkNP a_Quant ( mkNum ( mkCard damage ) ) health_N ) ) ) ) ;
+  
   -- Telling what is in the direction.
   ADirectionQuery direction object =
     mkUtt ( mkS ( mkCl ( mkNP ( mkNP a_Quant object ) ( S.mkAdv direction ( mkNP youPl_Pron ) ) ) ) ) ;
@@ -135,11 +141,8 @@ lin
     mkQS futureTense ( mkQCl whatPl_IP ( mkClSlash ( mkClSlash youPol_NP ( mkVPSlash (mkV2 "do") ) ) L.now_Adv ) ) ;
   
   BattlePrompt =
-    mkQS ( mkQCl ( mkIComp whatPl_IP ) ( mkNP ( mkQuant youPl_Pron ) ( mkCN ( mkAP (mkA "next") ) ( mkCN action_N ) ) ) ) ;
+    mkQS ( mkQCl ( mkIComp whatPl_IP ) ( mkNP ( C.mkQuant youPl_Pron ) ( mkCN ( mkAP (mkA "next") ) ( mkCN action_N ) ) ) ) ;
 
-  -- Enemy death announcement.
-  EnemyDeath enemy =
-    mkUtt ( mkS pastTense ( mkCl ( mkNP enemy  ) die_V ) ) ;
   -- Player death text.
   PlayerDeath =
     mkUtt ( mkS pastTense ( mkCl ( mkNP youPol_Pron ) die_V ) ) ;
@@ -187,6 +190,7 @@ lin
   LeatherSkirt = mkCN (mkN "leather skirt") ;
   VikingHelmet = mkCN (mkN "viking helmet") ;
   BaseballCap = mkCN (mkN "baseball cap") ;
+  UndyingTotem = mkCN (mkN "undying totem") ;
 
   -- Object nouns
   Boulder = mkCN (mkN "boulder") ;
@@ -227,16 +231,13 @@ lin
   Lose = mkV2 (mkV "lose" "lost" "lost") ;
 
   -- Useful verbs
-  find_V2 = mkV2 (mkV "find" "found" "found") ;
-  put_V2 = mkV2 (mkV "put" "put" "put");
   drop_V2 = mkV2 (mkV "drop") ;
   loot_V2 = mkV2 "loot" ;
   describe_V2 = mkV2 (mkV "describe") ;
   attack_V2 = mkV2 (mkV "attack") ;
   move_V2 = mkV2 (mkV "move") ;
   search_V2 = mkV2 (mkV "search") ;
-  hit_V2 = mkV2 (mkV "hit" "hit" "hit") ;
-  lose_V2 = mkV2 (mkV "lose" "lost" "lost") ;
+  lock_V2 = mkV2 (mkV "lock" "locked" "locked") ;
 
   ItemType adj = mkNP (mkCN adj (mkN "items")) ;
   Strong = mkA2 (mkA "strong") (mkPrep "against") ; 
