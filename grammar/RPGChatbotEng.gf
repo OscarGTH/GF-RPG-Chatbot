@@ -30,7 +30,6 @@ lincat
   EnemyAttribute = A ;
   ItemAttribute = A ;
   RoomAdjective = A ;
-  EnemyPower = A2 ;
   QuestionDirection = Prep ;
 
 lin
@@ -39,11 +38,17 @@ lin
   Move dir =
     mkImp move_V2 dir;
   Attack enemy item =
-    -- TODO: Using the on the first one forces the usage of the in the second noun.
-    -- Without articles, just for quality of life
-    mkImp (mkVP (mkVP attack_V2  (mkNP enemy)) (S.mkAdv with_Prep (mkNP item)))
-    -- With articles, for grammatical correctness
-    | mkImp (mkVP (mkVP attack_V2 (mkNP the_Det enemy)) (S.mkAdv with_Prep (mkNP the_Det item))) ;
+    -- All article forms.
+      mkImp (mkVP (mkVP attack_V2  (mkNP the_Det enemy)) (S.mkAdv with_Prep (mkNP item)))
+    | mkImp (mkVP (mkVP attack_V2 (mkNP the_Det enemy)) (S.mkAdv with_Prep (mkNP the_Det item)))
+    | mkImp (mkVP (mkVP attack_V2 (mkNP enemy)) (S.mkAdv with_Prep (mkNP the_Det item)))
+    | mkImp (mkVP (mkVP attack_V2 (mkNP enemy)) (S.mkAdv with_Prep (mkNP item))) ;
+    
+  AttackSameTarget item = 
+    -- Attacking without target
+    mkImp (mkVP (mkVP (mkV "attack")) (S.mkAdv with_Prep (mkNP the_Det item)))
+    | mkImp (mkVP (mkVP (mkV "attack")) (S.mkAdv with_Prep (mkNP item))) ;
+
 
   -- Looting enemies and entities
   Loot entity =
@@ -54,16 +59,34 @@ lin
 
   -- Dropping items (getting rid of them)
   Drop item =
-    mkImp drop_V2 (mkNP the_Det item) ;
+    mkImp drop_V2 (mkNP the_Det item)
+    | mkImp drop_V2 (mkNP item) ;
 
-  -- Moving items around locations (body parts, backpack, and pocketS.)
-  Put item location =
-      mkImp (mkVP (mkVP put_V2 (mkNP item)) (S.mkAdv to_Prep (mkNP location)))
-    | mkImp (mkVP (mkVP put_V2 (mkNP the_Det item)) (S.mkAdv to_Prep (mkNP location))) ;
+  -- Moving items around locations (head, legs, backpack)
+  -- Move sword from backpack to head
+  MoveItem item from_location to_location =
+      mkImp ( mkVP ( mkVP move_V2 ( mkNP item ) ) ( S.mkAdv from_Prep ( mkNP ( mkNP from_location ) ( S.mkAdv to_Prep ( mkNP to_location ) ) ) ) ) 
+    | mkImp ( mkVP ( mkVP move_V2 ( mkNP item ) ) ( S.mkAdv from_Prep ( mkNP ( mkNP from_location ) ( S.mkAdv to_Prep ( mkNP to_location ) ) ) ) ) ;
+  -- Equiping items, similar to moving from location to location, but it is faster to type.
+  -- Equip leather skirt
+  Equip item =
+    mkImp ( mkVP equip_V2 ( mkNP item ) )
+    | mkImp ( mkVP equip_V2 ( mkNP the_Det item ) ) ;
+  -- For unequiping items, same as moving away from subinventory to backpack.
+  Unequip item =
+    mkImp ( mkVP unequip_V2 ( mkNP item ) )
+    | mkImp ( mkVP unequip_V2 ( mkNP the_Det item ) ) ;
+  Open item object =
+    -- All possibilities of phrase (with both determiners, 1/2, 0/2 determiners.)
+      mkImp ( mkVP ( mkVP open_V2 ( mkNP the_Det object)) (S.mkAdv with_Prep (mkNP the_Det item)))
+    | mkImp ( mkVP ( mkVP open_V2 ( mkNP the_Det object)) (S.mkAdv with_Prep (mkNP item)))
+    | mkImp ( mkVP ( mkVP open_V2 ( mkNP object)) (S.mkAdv with_Prep (mkNP the_Det item)))
+    | mkImp ( mkVP ( mkVP open_V2 ( mkNP object)) (S.mkAdv with_Prep (mkNP item))) ;
 
   -- Asking information about enemy.
   DescribeEnemy enemy =
-    mkImp describe_V2 (mkNP the_Det enemy) ;
+     mkImp describe_V2 (mkNP the_Det enemy) 
+    | mkImp describe_V2 (mkNP enemy) ;
 
   -- [ QUESTIONS ]
   QDirectionQuery direction =
@@ -73,24 +96,54 @@ lin
     -- Allowing "in" and "on" prepositions because it might change (in my backpack)
     mkQCl whatSg_IP ( S.mkAdv in_Prep ( mkNP ( C.mkQuant i_Pron ) location))
     | mkQCl whatSg_IP ( S.mkAdv on_Prep ( mkNP (  C.mkQuant i_Pron ) location )) ;
-
+  
+  QEntityQuery =
+    -- what is around me
+    mkQCl whatSg_IP (S.mkAdv (mkPrep "around") (mkNP i_Pron))
+    -- what is in this room 
+    | mkQCl whatSg_IP (S.mkAdv in_Prep (mkNP this_Quant (mkN "room")));
 
   --[CHATBOT ANSWERS]
 
   -- Finding items as a result of looting
+  -- "You found an old sword"
   LootSuccess item =
     mkUtt (mkS pastTense (mkCl ( mkNP youSg_Pron ) find_V2 (mkNP a_Det item))) ;
-  -- Result of Put action
-  PutSuccess item location =
-     mkUtt ( mkS pastTense ( mkCl you_NP ( mkVP ( mkVP put_V2 ( mkNP ( item ) ) ) ( S.mkAdv to_Prep ( mkNP ( C.mkQuant youSg_Pron ) location ) ) ) ) ) ;
-  PutFail item =
+
+  -- You threw sword away
+  DropSuccess item =
+    mkUtt ( mkS pastTense ( mkCl ( mkNP youPol_Pron ) ( mkVP ( mkVP throw_V2 ( mkNP item ) ) S.mkAdv "away" ) ) ) ;
+  
+  -- Result of Move action
+  -- "You put kilt to your legs."
+  ItemMoveSuccess item location =
+    mkUtt ( mkS pastTense ( mkCl you_NP ( mkVP ( mkVP put_V2 ( mkNP ( item ) ) ) ( S.mkAdv to_Prep ( mkNP ( C.mkQuant youSg_Pron ) location ) ) ) ) ) ;
+  
+  -- "You cannot put viking helmet there"
+  ItemMoveFail item  =
     mkUtt (mkS negativePol (mkCl you_NP (mkVP (mkVP (mkVPSlash can8know_VV (mkVPSlash put_V2)) (mkNP item )) there7to_Adv))) ;
+  
+  -- "You can't equip that. "
+  EquipFail item = 
+    mkUtt ( mkS negativePol ( mkCl ( mkNP youPol_Pron ) ( mkVPSlash can8know_VV ( mkVPSlash equip_V2 ) ) ( mkNP a_Det item ) ) ) ;
+  
+  -- "<item name> was not equipped."
+  UnequipFail item = 
+    mkUtt ( mkS pastTense negativePol ( mkCl ( mkNP item ) ( passiveVP equip_V2 ) ) ) ;
+
+  -- "You cannot do that because viking helmet is on head."
+  ItemSlotTaken item location =
+    mkUtt ( mkS negativePol ( mkCl ( mkNP youPol_Pron ) ( mkVP ( mkVP can_VV ( mkVP do_V2 ( mkNP ( mkDet that_Quant ) ) ) ) ( S.mkAdv because_Subj ( mkS ( mkCl ( mkNP item ) ( S.mkAdv on_Prep ( mkNP location ) ) ) ) ) ) ) ) ;
+
   -- Result of successful movement action
   MoveSuccess direction =
     mkUtt ( mkS pastTense ( mkCl ( mkNP youSg_Pron ) move_V2 direction ));
+
   -- Result of failed movement action (eg. There is a boulder blocking the way)
   MoveFail object =
     mkUtt ( mkS negativePol ( mkCl ( mkNP youSg_Pron ) ( mkVP ( mkVP ( mkVP can8know_VV ( mkVP (mkV "go") ) ) there7to_Adv ) ( S.mkAdv because_Subj ( mkS ( mkCl ( mkNP a_Quant object ) ) ) ) ) ) ) ;
+  LootEnemyFail =
+    mkUtt ( mkS negativePol ( mkCl ( mkNP youPol_Pron ) ( mkVP ( mkVP ( mkVPSlash can8know_VV ( mkVPSlash loot_V2 ) ) ( mkNP ( mkDet that_Quant ) ) ) ( S.mkAdv because_Subj ( mkS ( mkCl ( mkVP (mkA "alive") ) ) ) ) ) ) );
   AttackSuccess enemy damage =
     mkUtt ( mkS and_Conj ( mkS ( mkCl ( mkNP youPol_Pron ) hit_V2 ( mkNP the_Quant enemy ) ) ) ( mkS pastTense ( mkCl ( mkNP it_Pron ) lose_V2 ( mkNP a_Quant ( mkNum ( mkCard damage ) ) health_N ) ) ) ) ;
   
@@ -106,16 +159,31 @@ lin
   -- Telling that object is locked.
   ObjectLocked object =  mkUtt ( mkS ( mkCl ( mkNP object ) ( passiveVP lock_V2 ) ) ) ;
   
+  -- Object has been unlocked.
+  ObjectUnlocked object = 
+    mkUtt ( mkS anteriorAnt ( mkCl ( mkNP object) (passiveVP unlock_V2))) ;
+
+  -- Object cannot be opened.
+  ObjectInvalidUnlock object =
+    mkUtt ( mkS negativePol ( mkCl (mkNP object)  can8know_VV (passiveVP open_V2))) ;
+  
+    -- Object cannot be looted.
+  ObjectInvalidLoot object =
+    mkUtt ( mkS negativePol ( mkCl (mkNP object)  can8know_VV (passiveVP loot_V2))) ;
+
   -- Telling user that an action cannot be done at the moment.
   InvalidAction =
      mkUtt ( mkS negativePol ( mkCl ( mkNP youPol_Pron ) ( mkVP ( mkVP ( mkVPSlash can8know_VV ( mkVPSlash do_V2 ) ) ( mkNP ( mkDet that_Quant right_Ord ) ) ) L.now_Adv ) ) ) ;
-  
+  -- Telling user that they cannot attack other targets while in a battle with one.
+  BattleInvalidTarget enemy =
+    mkUtt ( mkS negativePol ( mkCl ( mkNP youPol_Pron ) ( mkVP ( mkVP ( mkVPSlash can8know_VV ( mkVPSlash do_V2 ) ) ( mkNP ( mkDet that_Quant ) ) ) ( S.mkAdv because_Subj ( mkS ( mkCl ( mkNP youPol_Pron ) ( mkVP ( progressiveVP ( mkVP fight_V2 ( mkNP enemy ) ) ) already_Adv ) ) ) ) ) ) );
+
   ItemMissing item = 
     mkUtt ( mkS negativePol ( mkCl ( mkNP item ) ( mkVP ( mkVP can8know_VV ( passiveVP find_V2 ) ) ( S.mkAdv from_Prep ( mkNP ( C.mkQuant youPl_Pron ) inventory_N ) ) ) ) ) ;
   -- Telling that enemy has been encountered.
   EnemyEncountered enemy item = 
     mkUtt (mkCl (mkCN enemy (S.mkAdv with_Prep (mkNP a_Det item)))) ;
-
+  -- Enemy hit you and you lost 20 health.
   EnemyAttack enemy damage =
     mkUtt ( mkS and_Conj ( mkS pastTense ( mkCl ( mkNP the_Quant enemy ) hit_V2 ( mkNP youPl_Pron ) ) ) ( mkS pastTense ( mkCl you_NP lose_V2 ( mkNP a_Quant ( mkNum ( mkCard damage ) ) health_N ) ) ) ) ;
   
@@ -134,12 +202,17 @@ lin
   RoomIntro room adj =
     mkUtt (mkS and_Conj (mkS pastTense (mkCl you_NP (mkV2 (mkV "arrive") to_Prep) room)) (mkS (mkCl it_NP adj))) ;
 
-  EnemyDescription enemy power itemAttr =
-    mkUtt (mkCl (mkNP the_Det enemy) power itemAttr) ;
+  -- The dragon is weak against sharp items and it has a hammer.
+  EnemyDescWithItem enemy powerType itemKind item =
+    mkUtt ( mkS and_Conj ( mkS ( mkCl ( mkNP the_Quant enemy ) ( mkVP ( mkVP powerType ) ( S.mkAdv (mkPrep "against") itemKind ) ) ) ) ( mkS ( mkCl ( mkVP have_V2 ( mkNP a_Quant item ) ) ) ) ) ;
   
+  -- The dragon is weak against sharp items.
+  EnemyDescWithoutItem enemy powerType itemKind = 
+    mkUtt ( mkS ( mkCl ( mkNP the_Quant enemy ) ( mkVP ( mkVP powerType ) ( S.mkAdv (mkPrep "against") itemKind ) ) ) ) ;
+  -- What will you do now?
   InputPrompt =
     mkQS futureTense ( mkQCl whatPl_IP ( mkClSlash ( mkClSlash youPol_NP ( mkVPSlash (mkV2 "do") ) ) L.now_Adv ) ) ;
-  
+  -- What is your next action?
   BattlePrompt =
     mkQS ( mkQCl ( mkIComp whatPl_IP ) ( mkNP ( C.mkQuant youPl_Pron ) ( mkCN ( mkAP (mkA "next") ) ( mkCN action_N ) ) ) ) ;
 
@@ -178,6 +251,8 @@ lin
   Happy = mkA "happy" ;
   Old = mkA "old" ;
   Furious = mkA "furious" ;
+  Weak = mkA "weak" ;
+  Strong = mkA "strong" ;
   EnemyMod adjective enemy = mkCN adjective enemy ;
 
   -- Item nouns
@@ -200,6 +275,7 @@ lin
   Chest = mkCN (mkN "treasure chest") ;
   Wall = mkCN (mkN "wall") ;
   Bag = mkCN (mkN "bag") ;
+  PileOfBones = mkCN (mkN "pile of bones") ;
   EnemyObject enemy = mkCN enemy ;
   -- Basic nouns 
   health_N = mkN "health" "health" ;
@@ -238,9 +314,10 @@ lin
   move_V2 = mkV2 (mkV "move") ;
   search_V2 = mkV2 (mkV "search") ;
   lock_V2 = mkV2 (mkV "lock" "locked" "locked") ;
+  unlock_V2 = mkV2 (mkV "unlock" "unlocked" "unlocked") ;
+  equip_V2 = mkV2 (mkV "equip" "equipped" "equipped") ;
+  unequip_V2 = mkV2 (mkV "unequip" "unequipped" "unequipped") ;
 
+  -- "Sharp items"
   ItemType adj = mkNP (mkCN adj (mkN "items")) ;
-  Strong = mkA2 (mkA "strong") (mkPrep "against") ; 
-  Weak = mkA2 (mkA "weak") (mkPrep "against") ;
-
 }

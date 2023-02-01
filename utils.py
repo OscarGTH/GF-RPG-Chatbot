@@ -18,7 +18,7 @@ STYLES = {
 colorama_init()
 
 
-def say(text, style, start_lb=False, end_lb=True, capitalize=True):
+def say(text, style, start_lb=False, end_lb=True, capitalize=True, no_delay=False, line_end="\n"):
     if style in STYLES:
         text_style = STYLES.get(style)
         if capitalize:
@@ -29,27 +29,45 @@ def say(text, style, start_lb=False, end_lb=True, capitalize=True):
             text = "\n" + text
         if end_lb:
             text = text + "\n"
-        print_phrase(text, text_style)
+        print_phrase(text, text_style, line_end, no_delay)
     else:
         print(f"{Fore.RED} Invalid text color style. {Style.RESET_ALL}")
 
 
-def print_phrase(phrase, style):
+def print_cross(up, right, down, left):
+    """Prints a visualisation of 4 strings in a cross format."""
+    separator = "- - - - + - - - -"
+    mid_middle_point = (left + separator).index("+")
+    # Calculating middle points of the strings
+    up_middle_point = round(len(up) / 2 + 1) if len(up) % 2 else round(len(up) / 2)
+    down_middle_point = (
+        round(len(down) / 2 + 1) if len(down) % 2 else round(len(down) / 2)
+    )
+    # Printing out the cross formation
+    say((" " * (mid_middle_point - up_middle_point)) + up, "pos_result")
+    say((" " * (mid_middle_point)) + "|", "pos_result", no_delay=True, line_end="")
+    say(left + separator + right, "pos_result", capitalize=False)
+    say((" " * (mid_middle_point)) + "|", "pos_result",  no_delay=True, line_end="")
+    say((" " * (mid_middle_point - down_middle_point)) + down, "pos_result")
+
+
+def print_phrase(phrase, style, line_end, no_delay):
     """Prints a phrase one key at a time with small delay."""
 
-    if style.get("delay") is not False:
+    if style.get("delay") is not False and no_delay is False:
         for character in phrase:
             sys.stdout.write(
                 f"{style.get('back')}{style.get('fore')}{character}{Style.RESET_ALL}"
             )
             sys.stdout.flush()
-            if random.randint(0, 10) == 9:
+            # Making a longer pause on a 1/15 chance.
+            if random.randint(0, 15) == 1:
                 seconds = "0." + str(random.randrange(1, 2, 1))
             else:
-                seconds = "0.0" + str(random.randrange(5, 30, 1))
+                seconds = "0.0" + str(random.randrange(1, 15, 1))
             time.sleep(float(seconds))
     else:
-        print(f"{style.get('back')}{style.get('fore')}{phrase}{Style.RESET_ALL}")
+        print(f"{style.get('back')}{style.get('fore')}{phrase}{Style.RESET_ALL}", end=line_end)
 
 
 def get_random_key(dictionary) -> str:
@@ -97,7 +115,7 @@ move_directions = {
     "Backward": "Behind",
 }
 enemies = {
-    "Minotaur": {"health": 40, "power": 25},
+    "Minotaur": {"health": 30, "power": 25},
     "Orc": {"health": 20, "power": 8},
     "Goblin": {"health": 10, "power": 5},
     "Dragon": {"health": 90, "power": 20},
@@ -110,8 +128,25 @@ room_attributes = ["Damp", "Bright", "Dark", "Creepy", "Scary", "Peaceful"]
 enemy_modifiers = ["Angry", "Happy", "Furious", "Old"]
 objects = {
     "Boulder": {"lootable": False, "passable": False, "locked": False},
-    "Chest": {"lootable": True, "passable": True, "locked": True},
-    "Bag": {"lootable": True, "passable": True, "locked": False},
+    # Lootable objects.
+    "Chest": {
+        "lootable": True,
+        "passable": False,
+        "locked": True,
+        "rarities": ["Epic", "Unique"],
+    },
+    "Bag": {
+        "lootable": True,
+        "passable": False,
+        "locked": False,
+        "rarities": ["Common", "Rare", "Epic"],
+    },
+    "PileOfBones": {
+        "lootable": True,
+        "passable": False,
+        "locked": False,
+        "rarities": ["Common"],
+    },
     "Exit": {"lootable": False, "passable": True, "locked": False},
     "Gate": {"lootable": False, "passable": True, "locked": True},
     "Wall": {"lootable": False, "passable": False, "locked": False},
@@ -119,46 +154,105 @@ objects = {
 }
 # Items have attack power and health attribute, that the wearer gets as a bonus.
 items = {
-    "Sword": {"power": 7, "health": 0, "type": "weapon", "fits": ["Backpack"]},
-    "Axe": {"power": 13, "health": 0, "type": "weapon", "fits": ["Backpack"]},
-    "Hammer": {"power": 10, "health": 0, "type": "weapon", "fits": ["Backpack"]},
-    "WizardStaff": {"power": 20, "health": 0, "type": "weapon", "fits": ["Backpack"]},
-    "Key": {"power": 1, "health": 0, "type": "misc", "fits": ["Backpack"]},
+    "Sword": {
+        "power": 7,
+        "health": 0,
+        "type": "weapon",
+        "rarity": "Common",
+        "fits": ["Backpack"],
+    },
+    "Axe": {
+        "power": 13,
+        "health": 0,
+        "type": "weapon",
+        "rarity": "Rare",
+        "fits": ["Backpack"],
+    },
+    "Hammer": {
+        "power": 10,
+        "health": 0,
+        "type": "weapon",
+        "rarity": "Common",
+        "fits": ["Backpack"],
+    },
+    "WizardStaff": {
+        "power": 20,
+        "health": 0,
+        "type": "weapon",
+        "rarity": "Epic",
+        "fits": ["Backpack"],
+    },
+    "Key": {
+        "power": 1,
+        "health": 0,
+        "type": "misc",
+        "rarity": "Rare",
+        "fits": ["Backpack"],
+    },
     "ScottishKilt": {
         "power": 5,
         "health": 25,
         "type": "equip",
+        "rarity": "Epic",
         "fits": ["Backpack", "Legs"],
     },
     "LeatherSkirt": {
         "power": 2,
         "health": 15,
         "type": "equip",
+        "rarity": "Rare",
         "fits": ["Backpack", "Legs"],
     },
     "VikingHelmet": {
         "power": 12,
         "health": 10,
         "type": "equip",
+        "rarity": "Unique",
         "fits": ["Backpack", "Head"],
     },
     "BaseballCap": {
         "power": 6,
         "health": 8,
         "type": "equip",
+        "rarity": "Common",
         "fits": ["Backpack", "Head"],
     },
 }
 item_modifiers = {
-    "Sharp": lambda power, health: (power + 5, health),
-    "Dull": lambda power, health: (power - 8, health),
-    "Broken": lambda power, health: (power - 15, health - 10),
-    "Legendary": lambda power, health: (power * 4, health * 4),
-    "Magical": lambda power, health: (power * 2, health * 2),
-    "Shiny": lambda power, health: (power + 15, health + 15),
-    "Fiery": lambda power, health: (power + 20, health + 5),
-    "Mysterious": lambda power, health: (power * 3, health + 30),
-    "Frozen": lambda power, health: (power + 25, health + 10),
+    "Sharp": {
+        "modifier": lambda power, health: (power + 5, health),
+        "rarity": "Rare",
+    },
+    "Dull": {"modifier": lambda power, health: (power - 8, health), 
+             "rarity": "Common"},
+    "Broken": {
+        "modifier": lambda power, health: (power - 15, health - 10),
+        "rarity": "Common",
+    },
+    "Legendary": {
+        "modifier": lambda power, health: (power * 4, health * 4),
+        "rarity": "Unique",
+    },
+    "Magical": {
+        "modifier": lambda power, health: (power * 2, health * 2),
+        "rarity": "Epic",
+    },
+    "Shiny": {
+        "modifier": lambda power, health: (power + 10, health + 15),
+        "rarity": "Common",
+    },
+    "Fiery": {
+        "modifier": lambda power, health: (power + 16, health + 5),
+        "rarity": "Rare",
+    },
+    "Mysterious": {
+        "modifier": lambda power, health: (power * 3, health + 30),
+        "rarity": "Unique",
+    },
+    "Frozen": {
+        "modifier": lambda power, health: (power + 18, health + 10),
+        "rarity": "Epic",
+    },
 }
 locations = ["Backpack", "Head", "Legs"]
 room_modifiers = ["Damp", "Bright", "Dark", "Creepy", "Scary", "Peaceful"]

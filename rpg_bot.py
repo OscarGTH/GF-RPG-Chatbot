@@ -15,6 +15,7 @@ from utils import (
     expr_to_str,
     command_tree_examples,
     move_directions,
+    print_cross,
     enemies,
 )
 
@@ -55,23 +56,37 @@ class Player:
         """Returns all items from a specific subinventory."""
         items = [inv_item for inv_item in self.inventory[subinventory]]
         return items
+    
+    def get_item_subinventory(self, item) -> str:
+        """ Returns the subinventory name where item is located in."""
 
-    def is_item_in_inventory(self, item) -> bool:
+        inventories = ["Head","Legs","Backpack"]
+        for subinv in inventories:
+            for sub_item in self.inventory.get(subinv):
+                if sub_item.name == item:
+                    return subinv
+                
+
+    def is_item_in_inventory(self, item, subinventory=None) -> bool:
         """Checking if item is actually in inventory.
         Used for making sure that player cannot use items that they do not have.
         """
-        # Merging all inventory lists into one list to make searching easier.
-        # Items are placed to the list with their string names instead of objects.
-        all_items = [
-            item.name
-            for item in reduce(
-                lambda a, b: a + b, [arr for arr in self.inventory.values()]
-            )
-        ]
-        if item in all_items:
-            return True
+        if not subinventory:
+            # Merging all inventory lists into one list to make searching easier.
+            # Items are placed to the list with their string names instead of objects.
+            all_items = [
+                item.name
+                for item in reduce(
+                    lambda a, b: a + b, [arr for arr in self.inventory.values()]
+                )
+            ]
+            if item in all_items:
+                return True
+            else:
+                return False
         else:
-            return False
+            # Check if item is in subinventory.
+            return any([inv_item for inv_item in self.inventory[subinventory] if inv_item.name == item])
 
     def add_item_to_subinventory(self, item, subinventory) -> bool:
         """Adds an item to sub inventory if possible.
@@ -81,16 +96,80 @@ class Player:
             self.inventory[subinventory].append(item)
             return True
         else:
-            # TODO: Say about item not fitting there.
+            return False
+
+    def unequip(self, item, from_loc, to_loc) -> bool:
+        # Removing item
+        self.remove_item_from_subinventory(item, from_loc)
+        # Adding it to other inventory
+        self.add_item_to_subinventory(item, to_loc)
+        # Calculating stats again.
+        self.refresh_player_stats(item=item, addition=False)
+        return True
+
+    def equip(self, item, from_loc, to_loc) -> bool:
+        # Adding item
+        if self.add_item_to_subinventory(item, to_loc):
+            # Removing old item
+            self.remove_item_from_subinventory(item, from_loc)
+            # Calculating stats again.
+            self.refresh_player_stats()
+            return True
+        else:
+            return False
+
+    def remove_item_from_subinventory(self, item, subinventory) -> bool:
+        """ Removes an item from subinventory. """
+        # Calling removal of the item.
+        self.inventory[subinventory].remove(item)
+
+    def refresh_player_stats(self, item=None, addition=True):
+        """ Refreshes player stats based on the equipped items. """
+        total_power = self.power
+        total_health = self.health
+        subinvs = ["Head","Legs"]
+        # Getting stats from items in subinventories except backpack.
+        for subinv in subinvs:
+            # If item is equipped, then stats are increased.
+            if addition:
+                if item := self.get_subinventory_items(subinv):
+                    total_power = total_power + item[0].power
+                    total_health = total_health + item[0].health
+            else:
+                # Removing item stats if it is unequipped.
+                total_power = total_power - item.power
+                total_health = total_health - item.health
+
+        # Preventing health or power from dropping to 0 or below after item unequip/equip action.
+        if total_power < 1:
+            total_power = 1
+        if total_health < 1:
+            total_health = 1
+
+        # Updating calculated values to player stats.
+        self.power = total_power
+        self.health = total_health
+
+    def move_item_in_inventory(self, item, from_location, to_location):
+        """ Moves an item between inventories. """
+        item = self.get_subinventory_item(item, from_location)
+        # Adding item to subinventory first.
+        if self.add_item_to_subinventory(item, to_location):
+            # Removing item from origin inventory.
+            self.remove_item_from_subinventory(item, from_location)
+            return True
+        else:
             return False
 
     def get_attack_power_with_weapon(self, item) -> int:
-        """Calculates how much attack power player has with item and returns the value."""
+        """Calculates how much attack power player has with weapon and returns the value."""
+    
         weapon_obj = self.get_subinventory_item(item, "Backpack")
         return weapon_obj.power + self.power
 
     def reduce_player_health(self, reduction) -> None:
         """Reduces player health by a certain amount specified as argument."""
+
         self.health = self.health - reduction
 
 
@@ -147,7 +226,7 @@ class Item:
         # If modifier has been set, then the power needs to be processed by the modifier formula.
         if self.modifier:
             # Getting the lamba function that acts as modifier formula.
-            modifier_formula = item_modifiers.get(self.modifier)
+            modifier_formula = item_modifiers.get(self.modifier).get("modifier")
             # Calling the modifier formula function to modify health and power.
             power, health = modifier_formula(power, health)
             # Blocking negative hp, so entities cannot be killed by equipping an item.
@@ -162,6 +241,18 @@ class Enemy:
         self.item = self.generate_primary_item(allocate_item)
         # Calculating power after assigning possible item.
         self.power, self.health = self.calculate_enemy_stats()
+        # Trait makes enemy either weak or strong against some item attribute.
+        self.trait = self.generate_trait()
+    
+    def generate_trait(self) -> dict:
+        """ Generates a trait randomly and returns it."""
+        trait = {}
+        # Selecting either weak or strong.
+        trait["type"] = random.choice(["Weak","Strong"])
+        # Randomly selecting item modifier
+        trait["modifier"] = f"(ItemType {random.choice([mod for mod in item_modifiers])})"
+        return trait
+
 
     def generate_primary_item(self, allocate_item):
         """Generates an item for an enemy that is equipped."""
@@ -233,12 +324,22 @@ class Room:
         """Returns the entity that is in the direction of the argument."""
         return self.paths.get(direction)
 
-    def get_enemy_by_name(self, name) -> object:
+    def get_entity_by_name(self, entity_type, name) -> object:
         """Returns entity reference by name."""
         entities = list(self.paths.values())
-        enemies = [ent for ent in entities if ent.__class__.__name__ == "Enemy"]
-        enemy = [enemy for enemy in enemies if enemy.name == name]
-        return enemy[0]
+        entity_types = [ent for ent in entities if ent.__class__.__name__ == entity_type]
+        entity = [ent for ent in entity_types if ent.name == name]
+        return entity[0]
+    
+    def get_all_entity_names(self) -> list:
+        """ Returns all entity names in the room as strings in a list. 
+            Order of entities is the following:
+            (Infront, Right, Behind, Left)
+        """
+        entitity_objs = list(self.paths.values())
+        entities = [ent.name for ent in entitity_objs]
+        return entities
+
 
     def get_direction_of_entity(self, name) -> str:
         """Returns the direction of where the entity is."""
@@ -251,7 +352,65 @@ class Room:
         """Removes entity by name and replaces it with a door."""
 
         direction = self.get_direction_of_entity(name)
-        self.paths[direction] = Object(object_type="Door")
+        self.paths[direction] = Object(object_type="PileOfBones")
+
+    def open_entity_by_name(self, name) -> tuple:
+        """ Opens entity if it can be opened.
+            Returns tuple that contains the information 
+            about whether the unlock succeeded and a message to be said.
+         """
+        if self.check_if_entity_exists("Object", name):
+            direction = self.get_direction_of_entity(name)
+            entity = self.get_entity_by_name("Object", name)
+            # If object is locked then it can be also opened.
+            if entity.attributes.get("locked"):
+                # Opening the lock.
+                entity.attributes["locked"] = False
+                # Replacing the entity at direction with the modified version.
+                self.paths[direction] = entity
+                return (True, f"ObjectUnlocked {name}")
+            else:
+                return (False, f"ObjectInvalidUnlock {name}")
+        else:
+            return (False, f"ObjectMissing {name}")
+    
+    def loot_entity_by_name(self, name) -> tuple:
+        """ Loots entity if it is open. """
+        direction = self.get_direction_of_entity(name)
+        entity = self.get_entity_by_name("Object", name)
+        if entity.attributes.get("lootable"):
+            # If entity is locked, we return None and an error message. 
+            if entity.attributes.get("locked"):
+                return (None, f"ObjectLocked {name}")
+            else:
+
+                possible_raritites = entity.attributes.get("rarities")
+                loot_randomizer = random.randint(0,100)
+                # 40% chance to get item of specific rarity with common modifier
+                if loot_randomizer < 40:
+                    # Filtering out items that cannot be in the entity loot table.
+                    filt_items = [item for item in items if items.get(item).get("rarity") in possible_raritites]
+                    filt_modifiers = [mod for mod in item_modifiers if item_modifiers[mod].get("rarity") in ["Common"]]
+                # 40% chance to get common item with specific rarity modifier
+                elif loot_randomizer >= 40 and loot_randomizer < 80:
+                    # Item will be common, but modifier will be from specific rarities list.
+                    filt_items = [item for item in items if items.get(item).get("rarity") in ["Common"]]
+                    filt_modifiers = [mod for mod in item_modifiers if item_modifiers[mod].get("rarity") in possible_raritites]
+                # 20% chance to get item with specific rarity and specific rarity modifier (The best case scenario)
+                else:
+                    # Item will have specific rarity and the modifier will have specific rarity as well.
+                    filt_items = [item for item in items if items.get(item).get("rarity") in possible_raritites]
+                    filt_modifiers = [mod for mod in item_modifiers if item_modifiers[mod].get("rarity") in possible_raritites]
+
+                base_item = get_random_array_item(filt_items)
+                item_mod = get_random_array_item(filt_modifiers)
+                item = Item(item_type=base_item, item_modifier=item_mod)
+                # Replacing the looted object with wall.
+                self.paths[direction] = Object(object_type="Wall")
+                return (item, f"LootSuccess {item.name}")
+        else:
+            return (None, f"ObjectInvalidLoot {name}")
+        
 
     def check_if_entity_exists(self, entity_type, entity_name) -> bool:
         """Checks if any of the paths in the room have a specific entity."""
@@ -266,7 +425,7 @@ class Room:
 
         entities = {}
         # Possible directions in GF expressions format
-        dir_names = ["Infront", "Behind", "LeftSide", "RightSide"]
+        dir_names = ["Infront", "RightSide", "Behind", "LeftSide"]
         # Randomly selecting a direction of where the door is.
         # It has to be forced, so player cannot get stuck.
         door_dir = random.randint(0, 3)
@@ -354,22 +513,26 @@ class RPGBot:
         """Processes the GF parse tree and acts accordingly."""
         base_fun, args = command.unpack()
         if base_fun not in blocked_commands:
-
             if base_fun == "Move":
-                if base_fun not in blocked_commands:
-                    self.move(args)
+                self.move(args)
             elif base_fun == "Attack":
-                if base_fun not in blocked_commands:
-                    self.attack(args)
+                self.attack(args)
             elif base_fun == "Loot":
-                if base_fun not in blocked_commands:
-                    self.loot(args)
-            elif base_fun == "Put":
-                self.put(args)
+                self.loot(args)
+            elif base_fun == "Equip":
+                self.equip(args)
+            elif base_fun == "Unequip":
+                self.equip(args, unequip=True)
+            elif base_fun == "Open":
+                self.open(args)
             elif base_fun == "QDirectionQuery":
                 self.direction_query(args)
             elif base_fun == "QItemQuery":
                 self.item_query(args)
+            elif base_fun == "QEntityQuery":
+                self.entity_query()
+            elif base_fun == "DescribeEnemy":
+                self.describe_enemy(args)
             else:
                 print("Unknown category..")
         else:
@@ -387,7 +550,7 @@ class RPGBot:
             prob, tree = parseresult.__next__()
             return tree
         # Catching parse errors
-        except pgf.ParseError:
+        except pgf.ParseError as ex:
             # If category is set, then it is already second try, so we print out error message.
             if category:
                 # TODO: Add gf error message instead.
@@ -456,7 +619,7 @@ class RPGBot:
     def run_battle(self, weapon_arg, enemy_name) -> bool:
         """Handles the battle loop."""
         # Getting enemy object
-        enemy = self.room.get_enemy_by_name(enemy_name)
+        enemy = self.room.get_entity_by_name("Enemy", enemy_name)
         # Player gets to attack first. If attack fails, exit battle.
         if not self.do_player_attack(weapon_arg, enemy):
             return True
@@ -504,16 +667,21 @@ class RPGBot:
                                         # as the used weapon did not exist.
                                         pass
                                 else:
-                                    # TODO: say that player is already in a battle with enemy
                                     say(
-                                        "You are already fighting another enemy.",
-                                        "narrative",
+                                        self.to_lin(f"BattleInvalidTarget {enemy.name}"),
+                                        "neg_result",
                                     )
+                                    pass
+                            elif base_fun == "AttackSameTarget":
+                                # Attacking same enemy as before.
+                                if self.do_player_attack(args[0], enemy):
+                                    attack_not_done = False
+                                else:
                                     pass
                             else:
                                 # Processing other commands but blocking moving and looting while fighting.
                                 self.process_command(
-                                    command, blocked_commands=["Move", "Loot"]
+                                    command, blocked_commands=["Move", "Loot", "Open"]
                                 )
             else:
                 say(
@@ -600,34 +768,96 @@ class RPGBot:
     def loot(self, args):
         """Command for player loot action."""
 
-        say("Looting.", "narrative")
-        string_arg = str(args[0])
-        # If looting target is enemy, then it is wrapped in EnemyObject expression
-        if "EnemyObject" in string_arg:
-            # Entity type will be Enemy in this case.
-            ent_type = "Enemy"
-            # If enemy has modifier, then everything is wrapped in parenthesis.
-            if "EnemyMod" in string_arg:
-                # Extracting the enemy from inside the EnemyObject expression
-                start = string_arg.index("(") + 1
-                end = string_arg.rindex(")")
-                parsed_name = f"({string_arg[start:end]})"
+        parsed_name = f"{str(args[0])}"
+        if "EnemyObject" not in parsed_name:
+            if self.room.check_if_entity_exists("Object", parsed_name):
+                item, msg = self.room.loot_entity_by_name(parsed_name)
+                if item:
+                    # Adding loot to inventory
+                    self.player.add_item_to_subinventory(item, "Backpack")
+                    # Telling that item has been found.
+                    say(self.to_lin(msg), "pos_result")
+                else:
+                    # Printing error message about unsuccessful loot action.
+                    say(self.to_lin(msg), "neg_result") 
             else:
-                # Removing just the enemy object expression to get bare enemy type.
-                parsed_name = string_arg[len("EnemyObject ") :]
+                say(self.to_lin(f"ObjectMissing {parsed_name}"), "neg_result")
         else:
-            ent_type = "Object"
-            parsed_name = f"{str(args[0])}"
+            say(self.to_lin("LootEnemyFail"), "neg_result")
 
-        if self.room.check_if_entity_exists(ent_type, parsed_name):
-            say("You can loot that.", "narrative")
+    def equip(self, args, unequip=False):
+        """Command for player equip/unequip item action."""
+        item = expr_to_str("ItemMod", args[0])
+        if self.player.is_item_in_inventory(item):
+            # Getting the subinventory where the item is located.
+            from_location = self.player.get_item_subinventory(item)
+
+            # If location of the item is in backpack and player wants to unequip it
+            # Then error message is shown.
+            if from_location == "Backpack" and unequip:
+                say(self.to_lin(f"UnequipFail {item}"), "neg_result")
+                return
+            # Getting the item object
+            item_obj = self.player.get_subinventory_item(item, from_location)
+
+            # If item needs to be equipped, then it is not going to backpack.
+            if not unequip:
+                to_locations = [loc for loc in item_obj.fits_to if loc != "Backpack"]
+            else:
+                # If player wants to unequip item, then target is always backpack.
+                to_locations = ["Backpack"]
+
+            if to_locations:
+                # Getting the first element of the location array.
+                # There will only be one element left at this point.
+                to_location = to_locations[0]
+                # Getting items in subinventory
+                items_in_sub_inv = self.player.get_subinventory_items(to_location)
+                # Subinventory is empty, then equip action is allowed.
+                if to_location == "Backpack" or not items_in_sub_inv:
+                    if not unequip:
+                        success = self.player.equip(item_obj, from_location, to_location)
+                    else:
+                        success = self.player.unequip(item_obj, from_location, to_location)
+                    if success:
+                        say(self.to_lin(f"ItemMoveSuccess {item} {to_location}"),"pos_result")
+                    else:
+                        say(self.to_lin(f"ItemMoveFail {item}"), "neg_result")
+                else:
+                    # Item slot was taken by some other item.
+                    say(self.to_lin(f"ItemSlotTaken {items_in_sub_inv[0].name} {to_location}"),"neg_result")
+            else:
+                print("Test")
+                # Item could not be equipped to any slot.
+                say(self.to_lin(f"EquipFail {item}"),"neg_result")
         else:
-            say("Entity cannot be found.", "narrative")
+            say(
+                self.to_lin(f"ItemMissing {item}"),
+                "neg_result",
+                capitalize=False,
+            )
 
-    def put(self, args):
-        """Command for player put action."""
-        say("Putting.", "narrative")
-        print(args[0], args[1])
+    
+    def open(self, args):
+        """ Command for player open action. """
+        item = expr_to_str("ItemMod", args[0])
+        entity = str(args[1])
+        if self.player.is_item_in_inventory(item):
+            succeeded, msg = self.room.open_entity_by_name(entity)
+            # If opening succeeded, go here.
+            if succeeded:
+                # Removing key from inventory.
+                self.player.remove_item_from_subinventory(item, "Backpack")
+                say(self.to_lin(msg), "pos_result")
+            else:
+                # Printing error phrase if opening failed.
+                say(self.to_lin(msg),"neg_result")
+        else:
+            say(
+                self.to_lin(f"ItemMissing {item}"),
+                "neg_result",
+                capitalize=False,
+            )
 
     def direction_query(self, args):
         """Command for player asking about what is in each direction"""
@@ -666,6 +896,33 @@ class RPGBot:
                 say("- " + self.to_lin(f"{item.name}"), "pos_result", capitalize=False)
         else:
             say("-", "pos_result")
+
+    def entity_query(self):
+        """ Command for asking what entities are in the current room. """
+        entities = self.room.get_all_entity_names()
+        linearized_ents = []
+        # Looping over entities
+        for entity in entities:
+            # Linearizing expressions to strings.
+            linearized_ents.append(self.to_lin(entity))
+        # Printing the entities in cross format.
+        print_cross(*linearized_ents)
+    
+    def describe_enemy(self, args):
+        """ Command for asking the description about some enemy. """
+
+        enemy_name = expr_to_str("EnemyMod", args[0])
+        # If entity exists, we can describe it.
+        if self.room.check_if_entity_exists("Enemy", enemy_name):
+            enemy = self.room.get_entity_by_name("Enemy", enemy_name)
+            if enemy.item:
+                expression = f"EnemyDescWithItem {enemy_name} {enemy.trait['type']} {enemy.trait['modifier']} {enemy.item.name}"
+            else:
+                expression = f"EnemyDescWithoutItem {enemy_name} {enemy.trait['type']} {enemy.trait['modifier']}"
+            say(self.to_lin(expression), "narrative")
+
+
+
 
     def help(self):
         """Prints out the possible commands."""
