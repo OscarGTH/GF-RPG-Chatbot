@@ -110,9 +110,9 @@ lin
   LootSuccess item =
     mkUtt (mkS pastTense (mkCl ( mkNP youSg_Pron ) find_V2 (mkNP a_Det item))) ;
 
-  -- You threw sword away
+  -- You dropped sword
   DropSuccess item =
-    mkUtt ( mkS pastTense ( mkCl ( mkNP youPol_Pron ) ( mkVP ( mkVP throw_V2 ( mkNP item ) ) S.mkAdv "away" ) ) ) ;
+     mkUtt ( mkS pastTense ( mkCl ( mkNP youPol_Pron ) drop_V2 ( mkNP item ) ) ) ;
   
   -- Result of Move action
   -- "You put kilt to your legs."
@@ -170,6 +170,10 @@ lin
     -- Object cannot be looted.
   ObjectInvalidLoot object =
     mkUtt ( mkS negativePol ( mkCl (mkNP object)  can8know_VV (passiveVP loot_V2))) ;
+
+  -- "sword isn't a suitable item for that"
+  InvalidUnlockItem item =
+    mkUtt ( mkS negativePol ( mkCl ( mkNP item ) ( mkVP ( mkVP ( mkCN ( mkAP (mkA "suitable") ) ( mkCN (mkN "tool") ) ) ) ( S.mkAdv for_Prep ( mkNP ( mkDet that_Quant ) ) ) ) ) ) ;
 
   -- Telling user that an action cannot be done at the moment.
   InvalidAction =
@@ -239,18 +243,21 @@ lin
   Legs = mkCN (mkN "legs") ;
 
   -- Enemy nouns
-  Orc = mkCN (mkN "orc") ;
+  Troll = mkCN (mkN "troll") ;
   Goblin = mkCN (mkN "goblin") ;
   Dragon = mkCN (mkN "dragon") ;
-  Minotaur = mkCN (mkN "minotaur") ;
-  Mouse = mkCN (mkN "mouse") ;
-  Tiger = mkCN (mkN "tiger") ;
-  Bandit = mkCN (mkN "bandit") ;
+  GiantRat = mkCN (mkN "giant rat") ;
+  Ghoul = mkCN (mkN "ghoul") ;
+  Demon = mkCN (mkN "demon") ;
+  Skeleton = mkCN (mkN "skeleton") ;
+  Wizard = mkCN (mkN "wizard") ;
+
   -- Enemy modifiers
-  Angry = mkA "angry" ;
-  Happy = mkA "happy" ;
-  Old = mkA "old" ;
-  Furious = mkA "furious" ;
+  Infernal = mkA "infernal" ;
+  Veteran = mkA "veteran" ;
+  Young = mkA "young" ;
+  Teenager = mkA "teenager" ;
+  -- Enemy traits
   Weak = mkA "weak" ;
   Strong = mkA "strong" ;
   EnemyMod adjective enemy = mkCN adjective enemy ;
@@ -261,7 +268,7 @@ lin
   Hammer = mkCN (mkN "hammer") ;
   WizardStaff = mkCN (mkN "wizard staff") ;
   Key = mkCN (mkN "key") ;
-  ScottishKilt = mkCN (mkN "Scottish kilt") ;
+  PlatiniumSkirt = mkCN (mkN "platinium skirt") ;
   LeatherSkirt = mkCN (mkN "leather skirt") ;
   VikingHelmet = mkCN (mkN "viking helmet") ;
   BaseballCap = mkCN (mkN "baseball cap") ;
@@ -297,7 +304,7 @@ lin
   Dark = mkA "dark" ;
   Damp = mkA "damp" ;
   Bright = mkA "bright" ;
-  Creepy = mkA "creepy..." ; 
+  Creepy = mkA "creepy" ; 
   Scary = mkA "scary" ;
   Peaceful = mkA "peaceful" ;
   

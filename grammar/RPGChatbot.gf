@@ -61,6 +61,8 @@ fun
   MoveSuccess : MoveDirection -> Result ;
   -- "You cannot go there, because there is a boulder"
   MoveFail : Object -> Result ;
+  -- Notifying that item has been dropped.
+  DropSuccess : Item -> Result ;
   -- "You put viking helmet to head"
   ItemMoveSuccess : Item -> Location -> Result ;
   -- "You cannot put sword there"
@@ -88,6 +90,8 @@ fun
   ObjectUnlocked : Object -> Result ;
   -- Telling that object cannot be opened.
   ObjectInvalidUnlock : Object -> Result ;
+  -- Telling that item cannot be used for opening.
+  InvalidUnlockItem : Item -> Result ;
   -- Telling that object cannot be looted.
   ObjectInvalidLoot : Object -> Result ;
   -- You found a dull axe.
@@ -119,12 +123,12 @@ fun
   -- Shiny items, Dull items
   ItemType : ItemAttribute -> ItemDescription ;
   Sharp, Dull, Broken, Legendary, Magical, Shiny, Fiery, Mysterious, Frozen : ItemAttribute ;
-  Sword, Axe, Hammer, WizardStaff, Key, ScottishKilt, LeatherSkirt, VikingHelmet, BaseballCap, UndyingTotem : Item;
+  Sword, Axe, Hammer, WizardStaff, Key, PlatiniumSkirt, LeatherSkirt, VikingHelmet, BaseballCap, UndyingTotem : Item;
   -- Angry dragon, Nice mouse
   EnemyMod : EnemyAttribute -> Enemy -> Enemy ;
-  Angry, Happy, Furious, Old, Weak, Strong : EnemyAttribute ;
+  Infernal, Veteran, Young, Teenager, Weak, Strong : EnemyAttribute ;
 
-  Orc, Goblin, Dragon, Bandit, Mouse, Tiger, Minotaur : Enemy;
+  Troll, Goblin, Dragon, GiantRat, Ghoul, Demon, Skeleton, Wizard : Enemy;
 
   -- Objects that can exist in some direction.
   -- "There is a door"

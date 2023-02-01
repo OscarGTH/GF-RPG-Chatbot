@@ -18,7 +18,15 @@ STYLES = {
 colorama_init()
 
 
-def say(text, style, start_lb=False, end_lb=True, capitalize=True, no_delay=False, line_end="\n"):
+def say(
+    text,
+    style,
+    start_lb=False,
+    end_lb=True,
+    capitalize=True,
+    no_delay=False,
+    line_end="\n",
+):
     if style in STYLES:
         text_style = STYLES.get(style)
         if capitalize:
@@ -47,7 +55,7 @@ def print_cross(up, right, down, left):
     say((" " * (mid_middle_point - up_middle_point)) + up, "pos_result")
     say((" " * (mid_middle_point)) + "|", "pos_result", no_delay=True, line_end="")
     say(left + separator + right, "pos_result", capitalize=False)
-    say((" " * (mid_middle_point)) + "|", "pos_result",  no_delay=True, line_end="")
+    say((" " * (mid_middle_point)) + "|", "pos_result", no_delay=True, line_end="")
     say((" " * (mid_middle_point - down_middle_point)) + down, "pos_result")
 
 
@@ -67,7 +75,10 @@ def print_phrase(phrase, style, line_end, no_delay):
                 seconds = "0.0" + str(random.randrange(1, 15, 1))
             time.sleep(float(seconds))
     else:
-        print(f"{style.get('back')}{style.get('fore')}{phrase}{Style.RESET_ALL}", end=line_end)
+        print(
+            f"{style.get('back')}{style.get('fore')}{phrase}{Style.RESET_ALL}",
+            end=line_end,
+        )
 
 
 def get_random_key(dictionary) -> str:
@@ -114,18 +125,21 @@ move_directions = {
     "Forward": "Infront",
     "Backward": "Behind",
 }
+# TODO: Balance enemies.
 enemies = {
-    "Minotaur": {"health": 30, "power": 25},
-    "Orc": {"health": 20, "power": 8},
+    "Troll": {"health": 30, "power": 25},
+    "Ghoul": {"health": 20, "power": 8},
     "Goblin": {"health": 10, "power": 5},
     "Dragon": {"health": 90, "power": 20},
-    "Bandit": {"health": 28, "power": 8},
-    "Mouse": {"health": 5, "power": 1},
-    "Tiger": {"health": 35, "power": 15},
+    "GiantRat": {"health": 28, "power": 8},
+    "Demon": {"health": 80, "power": 60},
+    "Skeleton": {"health": 35, "power": 15},
+    "Wizard": {"health": 40, "power": 35},
 }
+
 enemy_attributes = ["Weak", "Strong"]
 room_attributes = ["Damp", "Bright", "Dark", "Creepy", "Scary", "Peaceful"]
-enemy_modifiers = ["Angry", "Happy", "Furious", "Old"]
+enemy_modifiers = ["Infernal", "Veteran", "Young", "Teenager", "Weak"]
 objects = {
     "Boulder": {"lootable": False, "passable": False, "locked": False},
     # Lootable objects.
@@ -189,7 +203,7 @@ items = {
         "rarity": "Rare",
         "fits": ["Backpack"],
     },
-    "ScottishKilt": {
+    "PlatiniumSkirt": {
         "power": 5,
         "health": 25,
         "type": "equip",
@@ -223,8 +237,7 @@ item_modifiers = {
         "modifier": lambda power, health: (power + 5, health),
         "rarity": "Rare",
     },
-    "Dull": {"modifier": lambda power, health: (power - 8, health), 
-             "rarity": "Common"},
+    "Dull": {"modifier": lambda power, health: (power - 8, health), "rarity": "Common"},
     "Broken": {
         "modifier": lambda power, health: (power - 15, health - 10),
         "rarity": "Common",
@@ -258,14 +271,14 @@ locations = ["Backpack", "Head", "Legs"]
 room_modifiers = ["Damp", "Bright", "Dark", "Creepy", "Scary", "Peaceful"]
 # Used in help command by linearizing these to show what can be said.
 command_tree_examples = {
-    "Descriptive": ["DescribeEnemy Mouse", "DescribeEnemy (EnemyMod Old Goblin)"],
-    "Drop": ["Drop (ItemMod Mysterious ScottishKilt)", "Drop WizardStaff"],
-    "Put": ["Put (ItemMod Mysterious ScottishKilt) Legs", "Put ScottishKilt Legs"],
+    "Descriptive": ["DescribeEnemy Demon", "DescribeEnemy (EnemyMod Young Goblin)"],
+    "Drop": ["Drop (ItemMod Mysterious PlatiniumSkirt)", "Drop WizardStaff"],
+    "Put": ["Put (ItemMod Mysterious PlatiniumSkirt) Legs", "Put PlatiniumSkirt Legs"],
     "Attack": [
-        "Attack Minotaur Hammer",
-        "Attack (EnemyMod Happy Orc) (ItemMod Mysterious Sword)",
-        "Attack (EnemyMod Happy Orc) Hammer",
-        "Attack Orc (ItemMod Mysterious Axe)",
+        "Attack Goblin Hammer",
+        "Attack (EnemyMod Young Goblin) (ItemMod Mysterious Sword)",
+        "Attack (EnemyMod Young Goblin) Hammer",
+        "Attack Dragon (ItemMod Mysterious Axe)",
     ],
     "Loot": ["Loot Chest"],
     "Move": ["Move Backward", "Move Forward", "Move Left", "Move Right"],
