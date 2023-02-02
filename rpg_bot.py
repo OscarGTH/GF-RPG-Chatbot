@@ -218,7 +218,7 @@ class RPGBot:
                     end_lb=True,
                 )
                 say(linearize_expr("PlayerDeath") + ".", "neg_result")
-                play_sounds("player_death.mp3")
+                play_sounds("player_death.wav")
                 time.sleep(3)
                 # Ending program.
                 sys.exit(1)
@@ -237,7 +237,7 @@ class RPGBot:
         if loot:
             # Adding item to player's backpack
             self.player.add_item_to_subinventory(loot, "Backpack")
-            play_sounds("enemy_loot.mp3")
+            play_sounds("enemy_loot.wav")
             # Telling that an item was found.
             say(
                 linearize_expr(f"LootSuccess {loot.name}"),
@@ -314,7 +314,7 @@ class RPGBot:
                 if item:
                     # Adding loot to inventory
                     self.player.add_item_to_subinventory(item, "Backpack")
-                    play_sounds("loot.mp3")
+                    play_sounds("loot.wav")
                     # Telling that item has been found.
                     say(linearize_expr(msg), "pos_result")
                 else:

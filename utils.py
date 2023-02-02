@@ -4,12 +4,12 @@ import os
 import time
 import pgf
 # Used for playing sound effects.
+import simpleaudio as sa
+import wave
 from colorama import init as colorama_init
 from colorama import Fore, Back, Style
-from pygame import mixer
 
-# Initializing sound mixer
-mixer.init()
+
 colorama_init()
 
 # PGF initialization
@@ -34,9 +34,10 @@ def play_sounds(sound_name) -> None:
     """ Plays a sounds effect. """
     path = f"sounds/{sound_name}"
     sound_path = os.path.join(os.getcwd(), path)
-    if os.path.isfile(sound_path):
-        mixer.music.load(sound_path)
-        mixer.music.play()
+    if "wav" in sound_name and os.path.isfile(sound_path):
+        wave_read = wave.open(sound_path, 'rb')
+        wave_obj = sa.WaveObject.from_wave_read(wave_read)
+        play_obj = wave_obj.play()
 
 
 def linearize_expr(expression) -> str:
