@@ -25,11 +25,11 @@ fun
   -- User actions
 
   -- what is <in front of me | behind me | on my left | on my right>
-  QDirectionQuery : QuestionDirection -> Question ;
+  QDirectionQuery : QuestionDirection -> Command ;
   -- what is in my backpack
-  QItemQuery : Location -> Question ;
-  -- what is around me
-  QEntityQuery : Question ;
+  QItemQuery : Location -> Command ;
+  -- what is in this room
+  QEntityQuery : Nouns -> Command ;
   -- Move forward, left, right, backwards.
   Move : MoveDirection -> Command ;
   -- Attack <enemy name> with <item name>.
@@ -39,8 +39,6 @@ fun
   AttackSameTarget : Item -> Command ;
   -- Loot <enemy/object name>
   Loot : Object -> Command ;
-  -- Move <item name> from <backpack> to <feet>
-  MoveItem : Item -> Location -> Location -> Command ;
   -- Equip <item name>
   Equip : Item -> Command ;
   -- Unequip <item name>
@@ -126,7 +124,7 @@ fun
   Sword, Axe, Hammer, WizardStaff, Key, PlatiniumSkirt, LeatherSkirt, VikingHelmet, BaseballCap, UndyingTotem : Item;
   -- Angry dragon, Nice mouse
   EnemyMod : EnemyAttribute -> Enemy -> Enemy ;
-  Infernal, Veteran, Young, Teenager, Weak, Strong : EnemyAttribute ;
+  Infernal, Veteran, Young, Rabid, Beefy, Weak, Strong : EnemyAttribute ;
 
   Troll, Goblin, Dragon, GiantRat, Ghoul, Demon, Skeleton, Wizard : Enemy;
 
@@ -148,7 +146,7 @@ fun
 
   -- Helper verbs
   loot_V2, drop_V2, describe_V2, attack_V2, equip_V2, unequip_V2, move_V2, lock_V2, search_V2, unlock_V2 : Action ;
-  health_N, action_N, inventory_N : Nouns ;
+  health_N, action_N, inventory_N, room_N : Nouns ;
   -- Used for creating numbered rooms such as "Room 15"
   RoomNumber : Int -> Room ;
   

@@ -1,19 +1,20 @@
 import sys
 import random
 import time
+from prompt_toolkit import prompt, HTML
 from utils import (
     say,
     int_to_digit,
     expr_to_str,
     print_cross,
     linearize_expr,
+    GFCompleter,
     parse_command,
-    play_sounds
+    play_sounds,
 )
 from constants import command_tree_examples, move_directions
 from player import Player
 from room import Room
-
 
 
 class RPGBot:
@@ -26,6 +27,8 @@ class RPGBot:
         self.room_number = 1
         # And making the room with the number
         self.room = Room(self.room_number)
+        # Initializing input suggester
+        self.input_completer = GFCompleter()
         # self.print_room_details(self.room)
         self.run_main_loop()
         pass
@@ -37,13 +40,23 @@ class RPGBot:
             entity = paths.get(way)
             print(entity.name)
 
+    def player_stat_toolbar(self):
+        return HTML(
+            f'<b><style bg="ansired">Health:</style> {self.player.health}  | <style bg="ansired">Power:</style> {self.player.power}</b> '
+        )
+
     def run_main_loop(self):
         """Contains main input loop of the program."""
         # Running endless loop
         while True:
+            # Adding fresh info for completer.
+            self.input_completer.set_info(self.player, self.room)
             say(linearize_expr("InputPrompt") + "?", "misc", start_lb=True)
-            user_input = input("\n")
-
+            user_input = prompt(
+                "> ",
+                completer=self.input_completer,
+                bottom_toolbar=self.player_stat_toolbar,
+            )
             if user_input == "exit":
                 break
             elif user_input == "help":
@@ -84,8 +97,6 @@ class RPGBot:
                 print("Unknown category..")
         else:
             say(linearize_expr("InvalidAction"), "program")
-
-    
 
     def move(self, args):
         """Command for player movement."""
@@ -145,6 +156,7 @@ class RPGBot:
 
     def run_battle(self, weapon_arg, enemy_name) -> bool:
         """Handles the battle loop."""
+        self.player.start_combat(enemy_name)
         # Getting enemy object
         enemy = self.room.get_entity_by_name("Enemy", enemy_name)
         # Player gets to attack first. If attack fails, exit battle.
@@ -159,8 +171,7 @@ class RPGBot:
             if self.player.health > 0:
                 # Telling how much health the player has left.
                 say(
-                    linearize_expr(f"PlayerHealth {int_to_digit(self.player.health)}"
-                    ),
+                    linearize_expr(f"PlayerHealth {int_to_digit(self.player.health)}"),
                     "narrative",
                 )
                 attack_not_done = True
@@ -171,8 +182,9 @@ class RPGBot:
                         "misc",
                         start_lb=True,
                     )
+                    self.input_completer.set_info(self.player, self.room)
                     # Receiving command from player.
-                    battle_input = input("\n")
+                    battle_input = prompt("##> ", completer=self.input_completer)
                     # Player can show available commands.
                     if battle_input == "help":
                         self.help()
@@ -227,6 +239,8 @@ class RPGBot:
         self.loot_enemy(enemy)
         # Removing the enemy after it has died.
         self.room.remove_entity_by_name(enemy.name)
+        # Removing player from combat.
+        self.player.end_combat()
         return True
 
     def loot_enemy(self, enemy):
@@ -431,7 +445,9 @@ class RPGBot:
                 # Unequipping item from equipment slot so statistic change is calculated.
                 self.player.unequip(item)
             # Removing item from backpack.
-            self.player.remove_item_from_subinventory(self.player.get_item_from_inventory(item), "Backpack")
+            self.player.remove_item_from_subinventory(
+                self.player.get_item_from_inventory(item), "Backpack"
+            )
             say(linearize_expr(f"DropSuccess {item}"), "pos_result")
         else:
             say(
@@ -450,7 +466,9 @@ class RPGBot:
             # If enemy has item, then a different answer is given.
             if entity.item:
                 say(
-                    linearize_expr(f"EnemyEncountered {entity.name} {entity.item.name}"),
+                    linearize_expr(
+                        f"EnemyEncountered {entity.name} {entity.item.name}"
+                    ),
                     "narrative",
                 )
                 return
@@ -474,7 +492,12 @@ class RPGBot:
         if items:
             for item in items:
                 # Printing each item without capitalization, because items names should always be lowercase.
-                say("- " + linearize_expr(f"{item.name}"), "pos_result", capitalize=False, no_delay=True)
+                say(
+                    "- " + linearize_expr(f"{item.name}"),
+                    "pos_result",
+                    capitalize=False,
+                    no_delay=True,
+                )
         else:
             say("-", "pos_result")
 

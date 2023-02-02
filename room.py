@@ -45,6 +45,14 @@ class Room:
         entitity_objs = list(self.paths.values())
         entities = [ent.name for ent in entitity_objs]
         return entities
+    
+    def get_all_entities_by_type(self, entity_type ) -> list:
+        """ Returns all entity names"""
+        entity_objs = list(self.paths.values())
+        entity_types = [
+            ent.name for ent in entity_objs if ent.__class__.__name__ == entity_type
+        ]
+        return entity_types
 
     def get_direction_of_entity(self, name) -> str:
         """Returns the direction of where the entity is."""

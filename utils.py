@@ -3,8 +3,14 @@ import sys
 import os
 import time
 import pgf
+
+# For auto-completions of input
+from prompt_toolkit.completion import NestedCompleter
+from prompt_toolkit.completion import Completer, Completion
+
 # Used for playing sound effects.
-import simpleaudio as sa
+# TODO: find a version that works with WSL too.
+# import simpleaudio as sa
 import wave
 from colorama import init as colorama_init
 from colorama import Fore, Back, Style
@@ -30,19 +36,34 @@ STYLES = {
     "help": {"fore": Fore.YELLOW, "back": "", "delay": False},
 }
 
+
 def play_sounds(sound_name) -> None:
-    """ Plays a sounds effect. """
+    """Plays a sounds effect."""
     path = f"sounds/{sound_name}"
     sound_path = os.path.join(os.getcwd(), path)
-    if "wav" in sound_name and os.path.isfile(sound_path):
-        wave_read = wave.open(sound_path, 'rb')
-        wave_obj = sa.WaveObject.from_wave_read(wave_read)
-        play_obj = wave_obj.play()
+    # if "wav" in sound_name and os.path.isfile(sound_path):
+    # wave_read = wave.open(sound_path, 'rb')
+    # wave_obj = sa.WaveObject.from_wave_read(wave_read)
+    # play_obj = wave_obj.play()
 
 
 def linearize_expr(expression) -> str:
     """Reads expression string and returns it as linearized string."""
     return language.linearize(pgf.readExpr(expression))
+
+
+def get_prediction(sugg_string, possibilities=None):
+    suggestions = language.complete(sugg_string)
+    if suggestions:
+        try:
+            next_sugg = suggestions.__next__()
+            # all_suggs = [x for x in suggestions]
+            # if all_suggs:
+            # for sugg in all_suggs:
+
+            return get_prediction(f"{sugg_string} {next_sugg[1]}")
+        except StopIteration:
+            return sugg_string
 
 
 def parse_command(user_input, category=None) -> pgf.Expr:
@@ -60,12 +81,90 @@ def parse_command(user_input, category=None) -> pgf.Expr:
     except pgf.ParseError as ex:
         # If category is set, then it is already second try, so we print out error message.
         if category:
-            # TODO: Add gf error message instead.
-            say("Unfortunately, I could not understand you.", "program")
+            prediction = get_prediction(user_input)
+            if prediction != user_input:
+                # Removing possible double whitespaces.
+                prediction = " ".join(prediction.split())
+                say(f'Did you mean to say "{prediction}"?', "program")
+            else:
+                say("Unfortunately, I could not understand you.", "program")
             return None
         else:
             # Setting category to question to try if input can then be parsed.
             return parse_command(user_input, category="Question")
+
+
+class GFCompleter(Completer):
+    def set_info(self, player, room):
+        self.player = player
+        self.room = room
+        # Get either current enemy or all enemies in room.
+        self.enemies = (
+            self.player.combat_target
+            if self.player.in_combat
+            else self.room.get_all_entities_by_type("Enemy")
+        )
+        self.item_suggestions = [
+            item.name for item in self.player.get_subinventory_items("Backpack")
+        ]
+        self.obj_suggestion = self.room.get_all_entities_by_type("Object")
+
+    def get_completions(self, document, complete_event):
+
+        comp = language.complete(document.text)
+        try:
+            all_suggs = [x for x in comp]
+            if all_suggs:
+                yielded = []
+                for sugg in all_suggs:
+                    if sugg[2] == "Enemy":
+                        for enemy in self.enemies:
+                            if enemy not in yielded:
+                                yielded.append(enemy)
+                                linearized = linearize_expr(enemy)
+                                yield Completion(linearized, start_position=0)
+                    elif sugg[2] in ["Item"]:
+                        for item in self.item_suggestions:
+                            if item not in yielded:
+                                yielded.append(item)
+                                linearized = linearize_expr(item)
+                                yield Completion(linearized, start_position=0)
+                    elif sugg[2] == "Object":
+                        for obj in self.obj_suggestion:
+                            if obj not in yielded:
+                                yielded.append(obj)
+                                linearized = linearize_expr(obj)
+                                yield Completion(linearized, start_position=0)
+                    elif sugg[2] in ["Location", "MoveDirection"]:
+                        if sugg[1] not in yielded:
+                            yielded.append(sugg[1])
+                            yield Completion(sugg[1], start_position=0)
+                    elif sugg[3] in [
+                        "QDirectionQuery",
+                        "Move",
+                        "QItemQuery",
+                        "Equip",
+                        "Drop",
+                        "Unequip",
+                        "QEntityQuery",
+                        "DescribeEnemy",
+                        "Loot",
+                        "Open",
+                        "Object",
+                    ]:
+                        if sugg[1] not in yielded:
+                            yielded.append(sugg[1])
+                            yield Completion(sugg[1], start_position=0)
+                    elif sugg[3] == "AttackSameTarget" and self.player.in_combat:
+                        if sugg[1] not in yielded:
+                            yielded.append(sugg[1])
+                            yield Completion(sugg[1], start_position=0)
+                    elif sugg[3] == "Attack":
+                        if sugg[1] not in yielded:
+                            yielded.append(sugg[1])
+                            yield Completion(sugg[1], start_position=0)
+        except:
+            pass
 
 
 def say(

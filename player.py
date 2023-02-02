@@ -12,10 +12,22 @@ class Player:
         # TODO: Add randomisation and perhaps more attributes? E.g stamina, sneak, charm, magic
         self.power = random.randint(5, 15)
         self.health = random.randint(30, 50)
+        self.in_combat = False
+        self.combat_target = None
         # Adding starting weapon to player.
         self.add_item_to_subinventory(
             Item(item_type="Sword", item_modifier=None), "Backpack"
         )
+
+    def start_combat(self, enemy_name):
+        """ Starts combat with enemy. """
+        self.in_combat = True
+        self.combat_target = [enemy_name]
+
+    def end_combat(self):
+        """ Ends combat with enemy. """
+        self.in_combat = False
+        self.combat_target = None
 
     def initialize_inventory(self) -> dict:
         inventory = {"Backpack": [], "Head": [], "Legs": []}

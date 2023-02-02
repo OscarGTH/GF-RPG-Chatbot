@@ -13,8 +13,7 @@ concrete RPGChatbotEng of RPGChatbot = NumeralEng ** open
   in {
 
 lincat
-  Command = Imp ;
-  Question = QCl ;
+  Command = Utt ;
   ProgramPrompt = QS ;
   Result = Utt ;
   Outcome = V2 ;
@@ -36,72 +35,66 @@ lin
   -- [ COMMANDS ]
   -- Moving character
   Move dir =
-    mkImp move_V2 dir;
+    mkUtt (mkImp move_V2 dir);
   Attack enemy item =
     -- All article forms.
-      mkImp (mkVP (mkVP attack_V2  (mkNP the_Det enemy)) (S.mkAdv with_Prep (mkNP item)))
-    | mkImp (mkVP (mkVP attack_V2 (mkNP the_Det enemy)) (S.mkAdv with_Prep (mkNP the_Det item)))
-    | mkImp (mkVP (mkVP attack_V2 (mkNP enemy)) (S.mkAdv with_Prep (mkNP the_Det item)))
-    | mkImp (mkVP (mkVP attack_V2 (mkNP enemy)) (S.mkAdv with_Prep (mkNP item))) ;
+      mkUtt (mkImp (mkVP (mkVP attack_V2  (mkNP the_Det enemy)) (S.mkAdv with_Prep (mkNP item))))
+    | mkUtt (mkImp (mkVP (mkVP attack_V2 (mkNP the_Det enemy)) (S.mkAdv with_Prep (mkNP the_Det item))))
+    | mkUtt (mkImp (mkVP (mkVP attack_V2 (mkNP enemy)) (S.mkAdv with_Prep (mkNP the_Det item))))
+    | mkUtt (mkImp (mkVP (mkVP attack_V2 (mkNP enemy)) (S.mkAdv with_Prep (mkNP item)))) ;
     
   AttackSameTarget item = 
     -- Attacking without target
-    mkImp (mkVP (mkVP (mkV "attack")) (S.mkAdv with_Prep (mkNP the_Det item)))
-    | mkImp (mkVP (mkVP (mkV "attack")) (S.mkAdv with_Prep (mkNP item))) ;
+    mkUtt (mkImp (mkVP (mkVP (mkV "attack")) (S.mkAdv with_Prep (mkNP the_Det item))))
+    | mkUtt (mkImp (mkVP (mkVP (mkV "attack")) (S.mkAdv with_Prep (mkNP item)))) ;
 
 
   -- Looting enemies and entities
   Loot entity =
-    mkImp loot_V2 (mkNP the_Det entity)
-    | mkImp search_V2 (mkNP the_Det entity)
-    | mkImp loot_V2 (mkNP entity)
-    | mkImp search_V2 (mkNP entity) ;
+    mkUtt (mkImp loot_V2 (mkNP the_Det entity))
+    | mkUtt (mkImp search_V2 (mkNP the_Det entity))
+    | mkUtt (mkImp loot_V2 (mkNP entity))
+    | mkUtt (mkImp search_V2 (mkNP entity)) ;
 
   -- Dropping items (getting rid of them)
   Drop item =
-    mkImp drop_V2 (mkNP the_Det item)
-    | mkImp drop_V2 (mkNP item) ;
+    mkUtt (mkImp drop_V2 (mkNP the_Det item))
+    | mkUtt (mkImp drop_V2 (mkNP item)) ;
 
-  -- Moving items around locations (head, legs, backpack)
-  -- Move sword from backpack to head
-  MoveItem item from_location to_location =
-      mkImp ( mkVP ( mkVP move_V2 ( mkNP item ) ) ( S.mkAdv from_Prep ( mkNP ( mkNP from_location ) ( S.mkAdv to_Prep ( mkNP to_location ) ) ) ) ) 
-    | mkImp ( mkVP ( mkVP move_V2 ( mkNP item ) ) ( S.mkAdv from_Prep ( mkNP ( mkNP from_location ) ( S.mkAdv to_Prep ( mkNP to_location ) ) ) ) ) ;
   -- Equiping items, similar to moving from location to location, but it is faster to type.
   -- Equip leather skirt
   Equip item =
-    mkImp ( mkVP equip_V2 ( mkNP item ) )
-    | mkImp ( mkVP equip_V2 ( mkNP the_Det item ) ) ;
+    mkUtt (mkImp ( mkVP equip_V2 ( mkNP item ) ))
+    | mkUtt (mkImp ( mkVP equip_V2 ( mkNP the_Det item ) )) ;
   -- For unequiping items, same as moving away from subinventory to backpack.
   Unequip item =
-    mkImp ( mkVP unequip_V2 ( mkNP item ) )
-    | mkImp ( mkVP unequip_V2 ( mkNP the_Det item ) ) ;
+    mkUtt (mkImp ( mkVP unequip_V2 ( mkNP item ) ))
+    | mkUtt (mkImp ( mkVP unequip_V2 ( mkNP the_Det item ) )) ;
   Open item object =
     -- All possibilities of phrase (with both determiners, 1/2, 0/2 determiners.)
-      mkImp ( mkVP ( mkVP open_V2 ( mkNP the_Det object)) (S.mkAdv with_Prep (mkNP the_Det item)))
-    | mkImp ( mkVP ( mkVP open_V2 ( mkNP the_Det object)) (S.mkAdv with_Prep (mkNP item)))
-    | mkImp ( mkVP ( mkVP open_V2 ( mkNP object)) (S.mkAdv with_Prep (mkNP the_Det item)))
-    | mkImp ( mkVP ( mkVP open_V2 ( mkNP object)) (S.mkAdv with_Prep (mkNP item))) ;
+      mkUtt (mkImp ( mkVP ( mkVP open_V2 ( mkNP the_Det object)) (S.mkAdv with_Prep (mkNP the_Det item))))
+    | mkUtt (mkImp ( mkVP ( mkVP open_V2 ( mkNP the_Det object)) (S.mkAdv with_Prep (mkNP item))))
+    | mkUtt (mkImp ( mkVP ( mkVP open_V2 ( mkNP object)) (S.mkAdv with_Prep (mkNP the_Det item))))
+    | mkUtt (mkImp ( mkVP ( mkVP open_V2 ( mkNP object)) (S.mkAdv with_Prep (mkNP item)))) ;
 
   -- Asking information about enemy.
   DescribeEnemy enemy =
-     mkImp describe_V2 (mkNP the_Det enemy) 
-    | mkImp describe_V2 (mkNP enemy) ;
+     mkUtt (mkImp describe_V2 (mkNP the_Det enemy)) 
+    | mkUtt (mkImp describe_V2 (mkNP enemy)) ;
 
   -- [ QUESTIONS ]
   QDirectionQuery direction =
-    mkQCl what_IP (S.mkAdv direction i_NP) ;
+    mkUtt (mkQCl what_IP (S.mkAdv direction i_NP)) ;
 
   QItemQuery location =
     -- Allowing "in" and "on" prepositions because it might change (in my backpack)
-    mkQCl whatSg_IP ( S.mkAdv in_Prep ( mkNP ( C.mkQuant i_Pron ) location))
-    | mkQCl whatSg_IP ( S.mkAdv on_Prep ( mkNP (  C.mkQuant i_Pron ) location )) ;
+    mkUtt (mkQCl whatSg_IP ( S.mkAdv in_Prep ( mkNP ( C.mkQuant i_Pron ) location)))
+    | mkUtt (mkQCl whatSg_IP ( S.mkAdv on_Prep ( mkNP (  C.mkQuant i_Pron ) location ))) ;
   
-  QEntityQuery =
-    -- what is around me
-    mkQCl whatSg_IP (S.mkAdv (mkPrep "around") (mkNP i_Pron))
-    -- what is in this room 
-    | mkQCl whatSg_IP (S.mkAdv in_Prep (mkNP this_Quant (mkN "room")));
+  QEntityQuery temp =
+    -- what is in this room
+    mkUtt (mkQCl whatSg_IP (S.mkAdv in_Prep (mkNP this_Quant (NounEng.UseN room_N))))
+    | mkUtt (mkQCl whatSg_IP (S.mkAdv (mkPrep "around") (mkNP i_Pron))) ;
 
   --[CHATBOT ANSWERS]
 
@@ -256,7 +249,8 @@ lin
   Infernal = mkA "infernal" ;
   Veteran = mkA "veteran" ;
   Young = mkA "young" ;
-  Teenager = mkA "teenager" ;
+  Beefy= mkA "beefy" ;
+  Rabid = mkA "rabid" ;
   -- Enemy traits
   Weak = mkA "weak" ;
   Strong = mkA "strong" ;
@@ -288,6 +282,7 @@ lin
   health_N = mkN "health" "health" ;
   action_N = mkN "action" ;
   inventory_N = mkN "inventory" ;
+  room_N = mkN "room" ;
 
   -- Item modifiers
   Sharp = mkA "sharp" ;
