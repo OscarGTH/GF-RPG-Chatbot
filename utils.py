@@ -1,9 +1,22 @@
 import random
 import sys
+import os
+import time
+import pgf
+# Used for playing sound effects.
+from IPython.display import Audio
 from colorama import init as colorama_init
 from colorama import Fore, Back, Style
-import time
 
+
+colorama_init()
+# PGF initialization
+absmodule = "RPGChatbot"
+AVAILABLE_LANGS = ["Eng"]
+grammar = pgf.readPGF(absmodule + ".pgf")
+language = grammar.languages["RPGChatbotEng"]
+
+# Text color styles
 STYLES = {
     "narrative": {"fore": Fore.LIGHTGREEN_EX, "back": Back.BLACK, "delay": True},
     "pos_result": {"fore": Fore.CYAN, "back": "", "delay": True},
@@ -15,7 +28,42 @@ STYLES = {
     "help": {"fore": Fore.YELLOW, "back": "", "delay": False},
 }
 
-colorama_init()
+def play_sounds(sound_name) -> None:
+    """ Plays a sounds effect. """
+    path = f"sounds/{sound_name}"
+    sound_path = os.path.join(os.getcwd(), path)
+    if os.path.isfile(sound_path):
+        Audio(sound_path)
+    else:
+        print("Is not file")
+
+
+def linearize_expr(expression) -> str:
+    """Reads expression string and returns it as linearized string."""
+    return language.linearize(pgf.readExpr(expression))
+
+
+def parse_command(user_input, category=None) -> pgf.Expr:
+    """Parses the user command in GF format and returns the parse tree."""
+    try:
+        # Category can be used to parse input from different category, such as a question.
+        if category:
+            parseresult = language.parse(user_input, cat=pgf.readType(category))
+        else:
+            # Parsing command category by default
+            parseresult = language.parse(user_input)
+        prob, tree = parseresult.__next__()
+        return tree
+    # Catching parse errors
+    except pgf.ParseError as ex:
+        # If category is set, then it is already second try, so we print out error message.
+        if category:
+            # TODO: Add gf error message instead.
+            say("Unfortunately, I could not understand you.", "program")
+            return None
+        else:
+            # Setting category to question to try if input can then be parsed.
+            return parse_command(user_input, category="Question")
 
 
 def say(
@@ -115,173 +163,3 @@ def expr_to_str(expr_type, expr) -> str:
     else:
         item = item_str
     return item
-
-
-# GF categories
-# Path directions are named differently than moving directions, so lookup table needs to exist.
-move_directions = {
-    "Left": "LeftSide",
-    "Right": "RightSide",
-    "Forward": "Infront",
-    "Backward": "Behind",
-}
-# TODO: Balance enemies.
-enemies = {
-    "Troll": {"health": 30, "power": 25},
-    "Ghoul": {"health": 20, "power": 8},
-    "Goblin": {"health": 10, "power": 5},
-    "Dragon": {"health": 90, "power": 20},
-    "GiantRat": {"health": 28, "power": 8},
-    "Demon": {"health": 80, "power": 60},
-    "Skeleton": {"health": 35, "power": 15},
-    "Wizard": {"health": 40, "power": 35},
-}
-
-enemy_attributes = ["Weak", "Strong"]
-room_attributes = ["Damp", "Bright", "Dark", "Creepy", "Scary", "Peaceful"]
-enemy_modifiers = ["Infernal", "Veteran", "Young", "Teenager", "Weak"]
-objects = {
-    "Boulder": {"lootable": False, "passable": False, "locked": False},
-    # Lootable objects.
-    "Chest": {
-        "lootable": True,
-        "passable": False,
-        "locked": True,
-        "rarities": ["Epic", "Unique"],
-    },
-    "Bag": {
-        "lootable": True,
-        "passable": False,
-        "locked": False,
-        "rarities": ["Common", "Rare", "Epic"],
-    },
-    "PileOfBones": {
-        "lootable": True,
-        "passable": False,
-        "locked": False,
-        "rarities": ["Common"],
-    },
-    "Exit": {"lootable": False, "passable": True, "locked": False},
-    "Gate": {"lootable": False, "passable": True, "locked": True},
-    "Wall": {"lootable": False, "passable": False, "locked": False},
-    "Door": {"lootable": False, "passable": True, "locked": False},
-}
-# Items have attack power and health attribute, that the wearer gets as a bonus.
-items = {
-    "Sword": {
-        "power": 7,
-        "health": 0,
-        "type": "weapon",
-        "rarity": "Common",
-        "fits": ["Backpack"],
-    },
-    "Axe": {
-        "power": 13,
-        "health": 0,
-        "type": "weapon",
-        "rarity": "Rare",
-        "fits": ["Backpack"],
-    },
-    "Hammer": {
-        "power": 10,
-        "health": 0,
-        "type": "weapon",
-        "rarity": "Common",
-        "fits": ["Backpack"],
-    },
-    "WizardStaff": {
-        "power": 20,
-        "health": 0,
-        "type": "weapon",
-        "rarity": "Epic",
-        "fits": ["Backpack"],
-    },
-    "Key": {
-        "power": 1,
-        "health": 0,
-        "type": "misc",
-        "rarity": "Rare",
-        "fits": ["Backpack"],
-    },
-    "PlatiniumSkirt": {
-        "power": 5,
-        "health": 25,
-        "type": "equip",
-        "rarity": "Epic",
-        "fits": ["Backpack", "Legs"],
-    },
-    "LeatherSkirt": {
-        "power": 2,
-        "health": 15,
-        "type": "equip",
-        "rarity": "Rare",
-        "fits": ["Backpack", "Legs"],
-    },
-    "VikingHelmet": {
-        "power": 12,
-        "health": 10,
-        "type": "equip",
-        "rarity": "Unique",
-        "fits": ["Backpack", "Head"],
-    },
-    "BaseballCap": {
-        "power": 6,
-        "health": 8,
-        "type": "equip",
-        "rarity": "Common",
-        "fits": ["Backpack", "Head"],
-    },
-}
-item_modifiers = {
-    "Sharp": {
-        "modifier": lambda power, health: (power + 5, health),
-        "rarity": "Rare",
-    },
-    "Dull": {"modifier": lambda power, health: (power - 8, health), "rarity": "Common"},
-    "Broken": {
-        "modifier": lambda power, health: (power - 15, health - 10),
-        "rarity": "Common",
-    },
-    "Legendary": {
-        "modifier": lambda power, health: (power * 4, health * 4),
-        "rarity": "Unique",
-    },
-    "Magical": {
-        "modifier": lambda power, health: (power * 2, health * 2),
-        "rarity": "Epic",
-    },
-    "Shiny": {
-        "modifier": lambda power, health: (power + 10, health + 15),
-        "rarity": "Common",
-    },
-    "Fiery": {
-        "modifier": lambda power, health: (power + 16, health + 5),
-        "rarity": "Rare",
-    },
-    "Mysterious": {
-        "modifier": lambda power, health: (power * 3, health + 30),
-        "rarity": "Unique",
-    },
-    "Frozen": {
-        "modifier": lambda power, health: (power + 18, health + 10),
-        "rarity": "Epic",
-    },
-}
-locations = ["Backpack", "Head", "Legs"]
-room_modifiers = ["Damp", "Bright", "Dark", "Creepy", "Scary", "Peaceful"]
-# Used in help command by linearizing these to show what can be said.
-command_tree_examples = {
-    "Descriptive": ["DescribeEnemy Demon", "DescribeEnemy (EnemyMod Young Goblin)"],
-    "Drop": ["Drop (ItemMod Mysterious PlatiniumSkirt)", "Drop WizardStaff"],
-    "Put": ["Put (ItemMod Mysterious PlatiniumSkirt) Legs", "Put PlatiniumSkirt Legs"],
-    "Attack": [
-        "Attack Goblin Hammer",
-        "Attack (EnemyMod Young Goblin) (ItemMod Mysterious Sword)",
-        "Attack (EnemyMod Young Goblin) Hammer",
-        "Attack Dragon (ItemMod Mysterious Axe)",
-    ],
-    "Loot": ["Loot Chest"],
-    "Move": ["Move Backward", "Move Forward", "Move Left", "Move Right"],
-    "Item Query": ["QItemQuery Backpack", "QItemQuery Legs", "QItemQuery Head"],
-    "Direction Query": ["QDirectionQuery Infront"],
-}
