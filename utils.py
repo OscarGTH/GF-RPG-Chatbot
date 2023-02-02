@@ -4,12 +4,14 @@ import os
 import time
 import pgf
 # Used for playing sound effects.
-from IPython.display import Audio
 from colorama import init as colorama_init
 from colorama import Fore, Back, Style
+from pygame import mixer
 
-
+# Initializing sound mixer
+mixer.init()
 colorama_init()
+
 # PGF initialization
 absmodule = "RPGChatbot"
 AVAILABLE_LANGS = ["Eng"]
@@ -33,9 +35,8 @@ def play_sounds(sound_name) -> None:
     path = f"sounds/{sound_name}"
     sound_path = os.path.join(os.getcwd(), path)
     if os.path.isfile(sound_path):
-        Audio(sound_path)
-    else:
-        print("Is not file")
+        mixer.music.load(sound_path)
+        mixer.music.play()
 
 
 def linearize_expr(expression) -> str:

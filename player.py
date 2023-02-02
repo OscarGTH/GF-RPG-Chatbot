@@ -35,6 +35,11 @@ class Player:
         items = [inv_item for inv_item in self.inventory[subinventory]]
         return items
 
+    def get_weapon_sound(self, item_name) -> str:
+        """ Returns weapon sound if it exists. """
+        weapon = self.get_item_from_inventory(item_name)
+        return weapon.sound
+
     def get_item_subinventory(self, item) -> str:
         """Returns the subinventory name where item is located in."""
 

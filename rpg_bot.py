@@ -1,5 +1,6 @@
 import sys
 import random
+import time
 from utils import (
     say,
     int_to_digit,
@@ -18,8 +19,6 @@ from room import Room
 class RPGBot:
     def __init__(self, args) -> None:
         """Initializes the chatbot."""
-
-        # Initializing the GF and setting the language.
 
         # Initializing game objects
         self.player = Player()
@@ -40,7 +39,6 @@ class RPGBot:
 
     def run_main_loop(self):
         """Contains main input loop of the program."""
-        play_sounds("sword_hit.mp3")
         # Running endless loop
         while True:
             say(linearize_expr("InputPrompt") + "?", "misc", start_lb=True)
@@ -220,6 +218,8 @@ class RPGBot:
                     end_lb=True,
                 )
                 say(linearize_expr("PlayerDeath") + ".", "neg_result")
+                play_sounds("player_death.mp3")
+                time.sleep(3)
                 # Ending program.
                 sys.exit(1)
         say(linearize_expr(f"FightResult {enemy.name} Lose") + ".", "neg_result")
@@ -237,6 +237,7 @@ class RPGBot:
         if loot:
             # Adding item to player's backpack
             self.player.add_item_to_subinventory(loot, "Backpack")
+            play_sounds("enemy_loot.mp3")
             # Telling that an item was found.
             say(
                 linearize_expr(f"LootSuccess {loot.name}"),
@@ -269,10 +270,16 @@ class RPGBot:
         # Checking that weapon is in player's inventory.
         if self.player.is_item_in_inventory(weapon):
             power = self.player.get_attack_power_with_weapon(weapon)
+            # Getting file name for the weapon sound for the particular weapon.
+            weapon_sound = self.player.get_weapon_sound(weapon)
             # Real attack power is randomized in range of attack power +- 3.
             rand_range = random.randint(power - 3, power + 3)
             # Value shouldn't be less than 0.
             realized_power = rand_range if rand_range >= 0 else 0
+            # All weapons might not have sound, so only play the ones that exist.
+            if weapon_sound:
+                # Playing sound of the weapon strike
+                play_sounds(weapon_sound)
             say(
                 linearize_expr(
                     f"AttackSuccess {enemy.name} {int_to_digit(realized_power)}"
@@ -307,6 +314,7 @@ class RPGBot:
                 if item:
                     # Adding loot to inventory
                     self.player.add_item_to_subinventory(item, "Backpack")
+                    play_sounds("loot.mp3")
                     # Telling that item has been found.
                     say(linearize_expr(msg), "pos_result")
                 else:
@@ -315,7 +323,10 @@ class RPGBot:
             else:
                 say(linearize_expr(f"ObjectMissing {parsed_name}"), "neg_result")
         else:
-            say(linearize_expr("LootEnemyFail"), "neg_result")
+            if self.room.check_if_entity_exists("EnemyObject", parsed_name):
+                say(linearize_expr(f"ObjectMissing {parsed_name}"), "neg_result")
+            else:
+                say(linearize_expr("LootEnemyFail"), "neg_result")
 
     def equip(self, args, unequip=False):
         """Command for player equip/unequip item action."""

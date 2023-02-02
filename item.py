@@ -19,6 +19,8 @@ class Item:
         self.power, self.health = self.calculate_item_stats()
         self.fits_to = self.base_attrs.get("fits")
         self.type = self.base_attrs.get("type")
+        # Sound that is played when the weapon is used for attacking.
+        self.sound = self.base_attrs.get("sound")
 
     def generate_item(self, item_type, item_modifier) -> tuple:
         """Generates an item either randomly or

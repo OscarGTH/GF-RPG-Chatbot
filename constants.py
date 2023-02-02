@@ -88,6 +88,7 @@ items = {
         "type": "weapon",
         "rarity": "Common",
         "fits": ["Backpack"],
+        "sound": "sword_hit.mp3"
     },
     "Axe": {
         "power": 13,
@@ -95,6 +96,7 @@ items = {
         "type": "weapon",
         "rarity": "Rare",
         "fits": ["Backpack"],
+        "sound": "axe_hit.mp3"
     },
     "Hammer": {
         "power": 10,
@@ -102,6 +104,7 @@ items = {
         "type": "weapon",
         "rarity": "Common",
         "fits": ["Backpack"],
+        "sound": "hammer_hit.mp3"
     },
     "WizardStaff": {
         "power": 20,
@@ -109,6 +112,7 @@ items = {
         "type": "weapon",
         "rarity": "Epic",
         "fits": ["Backpack"],
+        "sound": "magic_hit.mp3"
     },
     "Key": {
         "power": 1,
