@@ -61,6 +61,14 @@ class Player:
                 if sub_item.name == item:
                     return subinv
 
+    def get_all_items_from_inventory(self) -> list:
+        """ Returns all item references from all inventories. """
+        inventories = self.inventory.keys()
+        all_items = []
+        for inv in inventories:
+            all_items.extend(self.get_subinventory_items(inv))
+        return all_items
+ 
     def get_item_from_inventory(self, item_name) -> object:
         """Returns an item reference from any inventory."""
         sub_inv = self.get_item_subinventory(item_name)
@@ -161,17 +169,6 @@ class Player:
         # Updating calculated values to player stats.
         self.power = total_power
         self.health = total_health
-
-    def move_item_in_inventory(self, item, from_location, to_location):
-        """Moves an item between inventories."""
-        item = self.get_subinventory_item(item, from_location)
-        # Adding item to subinventory first.
-        if self.add_item_to_subinventory(item, to_location):
-            # Removing item from origin inventory.
-            self.remove_item_from_subinventory(item, from_location)
-            return True
-        else:
-            return False
 
     def get_attack_power_with_weapon(self, item) -> int:
         """Calculates how much attack power player has with weapon and returns the value."""

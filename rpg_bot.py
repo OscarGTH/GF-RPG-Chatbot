@@ -52,6 +52,7 @@ class RPGBot:
             # Adding fresh info for completer.
             self.input_completer.set_info(self.player, self.room)
             say(linearize_expr("InputPrompt") + "?", "misc", start_lb=True)
+            # Prompting for user input with automatic suggestions.
             user_input = prompt(
                 "> ",
                 completer=self.input_completer,
@@ -62,7 +63,7 @@ class RPGBot:
             elif user_input == "help":
                 self.help()
             else:
-                if command := parse_command(user_input):
+                if command := parse_command(user_input, self.input_completer):
                     self.process_command(command)
                 else:
                     pass
@@ -156,6 +157,8 @@ class RPGBot:
 
     def run_battle(self, weapon_arg, enemy_name) -> bool:
         """Handles the battle loop."""
+        # Starting combat
+        # This helps to narrow down automatic suggestion context.
         self.player.start_combat(enemy_name)
         # Getting enemy object
         enemy = self.room.get_entity_by_name("Enemy", enemy_name)
@@ -184,14 +187,14 @@ class RPGBot:
                     )
                     self.input_completer.set_info(self.player, self.room)
                     # Receiving command from player.
-                    battle_input = prompt("##> ", completer=self.input_completer)
+                    battle_input = prompt("##> ", completer=self.input_completer, bottom_toolbar=self.player_stat_toolbar)
                     # Player can show available commands.
                     if battle_input == "help":
                         self.help()
                     elif battle_input == "exit":
                         sys.exit(1)
                     else:
-                        if command := parse_command(battle_input):
+                        if command := parse_command(battle_input, self.input_completer):
                             base_fun, args = command.unpack()
                             # Process "Attack" command here to prevent starting the battle again.
                             if base_fun == "Attack":

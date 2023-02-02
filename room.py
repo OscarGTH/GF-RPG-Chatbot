@@ -1,9 +1,10 @@
 import random
 from utils import get_random_array_item, say, linearize_expr
-from constants import room_attributes, items, item_modifiers
+from constants import room_attributes, items, item_modifiers, move_directions
 from entity import Object
 from enemy import Enemy
 from item import Item
+
 
 class Room:
     """Represents room object."""
@@ -45,12 +46,28 @@ class Room:
         entitity_objs = list(self.paths.values())
         entities = [ent.name for ent in entitity_objs]
         return entities
-    
-    def get_all_entities_by_type(self, entity_type ) -> list:
-        """ Returns all entity names"""
+
+    def get_possible_moving_directions(self) -> list:
+        """Returns list of directions where the player can move."""
+        entities = self.get_all_entities_by_type("Object")
+        directions = []
+        for ent in entities:
+            # Get passable objects and return move directions instead of entity directions.
+            passable = [
+                key
+                for key, val in move_directions.items()
+                if val == self.get_direction_of_entity(ent.name)
+                and ent.attributes.get("passable")
+            ]
+            if passable:
+                directions.append(passable[0])
+        return directions
+
+    def get_all_entities_by_type(self, entity_type) -> list:
+        """Returns all entity names"""
         entity_objs = list(self.paths.values())
         entity_types = [
-            ent.name for ent in entity_objs if ent.__class__.__name__ == entity_type
+            ent for ent in entity_objs if ent.__class__.__name__ == entity_type
         ]
         return entity_types
 

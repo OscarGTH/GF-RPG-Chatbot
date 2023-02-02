@@ -52,21 +52,7 @@ def linearize_expr(expression) -> str:
     return language.linearize(pgf.readExpr(expression))
 
 
-def get_prediction(sugg_string, possibilities=None):
-    suggestions = language.complete(sugg_string)
-    if suggestions:
-        try:
-            next_sugg = suggestions.__next__()
-            # all_suggs = [x for x in suggestions]
-            # if all_suggs:
-            # for sugg in all_suggs:
-
-            return get_prediction(f"{sugg_string} {next_sugg[1]}")
-        except StopIteration:
-            return sugg_string
-
-
-def parse_command(user_input, category=None) -> pgf.Expr:
+def parse_command(user_input, completer, category=None) -> pgf.Expr:
     """Parses the user command in GF format and returns the parse tree."""
     try:
         # Category can be used to parse input from different category, such as a question.
@@ -79,35 +65,128 @@ def parse_command(user_input, category=None) -> pgf.Expr:
         return tree
     # Catching parse errors
     except pgf.ParseError as ex:
-        # If category is set, then it is already second try, so we print out error message.
+        # If category is set, then it is already second try, so we try to predict the input.
         if category:
-            prediction = get_prediction(user_input)
+            # Setting context information
+            prediction = completer.get_prediction(user_input, None)
             if prediction != user_input:
                 # Removing possible double whitespaces.
-                prediction = " ".join(prediction.split())
+                # prediction = " ".join(prediction.split())
                 say(f'Did you mean to say "{prediction}"?', "program")
             else:
                 say("Unfortunately, I could not understand you.", "program")
             return None
         else:
             # Setting category to question to try if input can then be parsed.
-            return parse_command(user_input, category="Question")
+            return parse_command(user_input, completer, category="Question")
+
+
+def remove_duplicate_substring(string):
+    """Removes duplicate occurences of substring next to each other,
+    such as 'attack >beefy< beefy skeleton'"""
+    words = string.split()
+    return ' '.join([words[i] for i in range(len(words)) if (i == 0) or words[i] != words[i - 1]])
 
 
 class GFCompleter(Completer):
+    """Context aware input completer"""
+
+    def get_prediction(
+        self,
+        sugg_string,
+        possible_command,
+    ):
+        """Tries to predict incomplete input string as accurately as possible.
+        Takes context into account, so it does not predict scenarios that cannot happen.
+        """
+        # Getting suggestion based on the suggestion string.
+        suggestions = language.complete(sugg_string)
+        try:
+            # Getting first suggestion
+            sugg = suggestions.__next__()
+            term = sugg[1]
+            # Saving possible command so it can be used to make better predictions.
+            if not possible_command and sugg[2] == "Command":
+                possible_command = sugg[3]
+            # Catching enemies, items and objects as those need to be filtered to match context.
+            if sugg[2] == "Enemy":
+                term = linearize_expr(get_random_array_item(self.enemy_suggestions))
+            # Catching items to add context.
+            elif sugg[2] == "Item":
+                key = None
+                filtered_items = self.items
+                # Matching possible command, to prevent suggesting items that do not fit the usual use case.
+                # e.g using key to attack is not useful even if it would be the first suggestion from GF.
+                if possible_command in ["Equip", "Unequip"]:
+                    key = "equip"
+                elif possible_command == "Attack":
+                    key = "weapon"
+                elif possible_command == "Open":
+                    key = "misc"
+
+                # If key was set, then some filtering needs to be done.
+                if key:
+                    # Filtering items by their type.
+                    filtered = [i for i in self.items if i.type == key]
+                    if filtered:
+                        filtered_items = filtered
+                # Choosing random item among filtered items
+                chosen_item = get_random_array_item(filtered_items)
+                # Setting the name of the item as the term.
+                term = linearize_expr(chosen_item.name)
+            elif sugg[2] == "Object":
+                chosen_object = get_random_array_item(self.objects)
+                # Setting keys for specific actions
+                if possible_command == "Loot":
+                    key = "lootable"
+                elif possible_command == "Open":
+                    key = "locked"
+                
+                if key:
+                    filtered = [x for x in self.objects if x.attributes.get(key)]
+                    if filtered:
+                        chosen_object = filtered[0]
+                term = linearize_expr(chosen_object.name)
+            elif sugg[2] == "MoveDirection":
+                # Predicting only valid directions.
+                chosen_direction = get_random_array_item(self.valid_directions)
+                term = linearize_expr(chosen_direction)
+
+            # Constructing the word and removing possible duplicate substrings.
+            built_word = remove_duplicate_substring(f"{sugg_string} {term}")
+            # Calling itself recursively with previous and new term added together.
+            # Eventually function will terminate when StopIteration is thrown.
+            return self.get_prediction(built_word, possible_command)
+
+        except StopIteration:
+            # Returning final constructed string.
+            return sugg_string
+
     def set_info(self, player, room):
+        """Updates fresh information about the context,
+        so input suggestions can be more smart.
+        """
         self.player = player
         self.room = room
-        # Get either current enemy or all enemies in room.
-        self.enemies = (
+        # All enemy objects for better predictions.
+        self.enemies = self.room.get_all_entities_by_type("Enemy")
+        # Enemy names only or the enemy that the player is fighting.
+        self.enemy_suggestions = (
             self.player.combat_target
             if self.player.in_combat
-            else self.room.get_all_entities_by_type("Enemy")
+            else [enemy.name for enemy in self.enemies]
         )
-        self.item_suggestions = [
-            item.name for item in self.player.get_subinventory_items("Backpack")
-        ]
-        self.obj_suggestion = self.room.get_all_entities_by_type("Object")
+        # Item objects for further analyzing.
+        self.items = [item for item in self.player.get_all_items_from_inventory()]
+        # Item names only
+        self.item_suggestions = [item.name for item in self.items]
+        # Object objects (class)
+        self.objects = self.room.get_all_entities_by_type("Object")
+        # Object names only
+        self.obj_suggestions = [obj.name for obj in self.objects]
+        # Directions where the player can move successfully.
+        # Used for predictions.
+        self.valid_directions = self.room.get_possible_moving_directions()
 
     def get_completions(self, document, complete_event):
 
@@ -118,12 +197,12 @@ class GFCompleter(Completer):
                 yielded = []
                 for sugg in all_suggs:
                     if sugg[2] == "Enemy":
-                        for enemy in self.enemies:
+                        for enemy in self.enemy_suggestions:
                             if enemy not in yielded:
                                 yielded.append(enemy)
                                 linearized = linearize_expr(enemy)
                                 yield Completion(linearized, start_position=0)
-                    elif sugg[2] in ["Item"]:
+                    elif sugg[2] == "Item":
                         for item in self.item_suggestions:
                             if item not in yielded:
                                 yielded.append(item)
@@ -135,7 +214,7 @@ class GFCompleter(Completer):
                                 yielded.append(obj)
                                 linearized = linearize_expr(obj)
                                 yield Completion(linearized, start_position=0)
-                    elif sugg[2] in ["Location", "MoveDirection"]:
+                    elif sugg[2] in ["Location", "MoveDirection", "QuestionDirection"]:
                         if sugg[1] not in yielded:
                             yielded.append(sugg[1])
                             yield Completion(sugg[1], start_position=0)
@@ -151,15 +230,12 @@ class GFCompleter(Completer):
                         "Loot",
                         "Open",
                         "Object",
+                        "Attack",
                     ]:
                         if sugg[1] not in yielded:
                             yielded.append(sugg[1])
                             yield Completion(sugg[1], start_position=0)
                     elif sugg[3] == "AttackSameTarget" and self.player.in_combat:
-                        if sugg[1] not in yielded:
-                            yielded.append(sugg[1])
-                            yield Completion(sugg[1], start_position=0)
-                    elif sugg[3] == "Attack":
                         if sugg[1] not in yielded:
                             yielded.append(sugg[1])
                             yield Completion(sugg[1], start_position=0)
@@ -239,8 +315,10 @@ def get_random_key(dictionary) -> str:
 
 def get_random_array_item(array) -> str:
     """Select random item from array."""
-    rand_item = array[random.randint(0, len(array) - 1)]
-    return rand_item
+    if array:
+        return random.choice(array)
+    else:
+        return ""
 
 
 def int_to_digit(number) -> str:
