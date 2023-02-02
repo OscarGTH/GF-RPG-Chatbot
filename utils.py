@@ -11,7 +11,7 @@ from prompt_toolkit.completion import Completer, Completion
 # Used for playing sound effects.
 # TODO: find a version that works with WSL too.
 # import simpleaudio as sa
-import wave
+# import wave
 from colorama import init as colorama_init
 from colorama import Fore, Back, Style
 
@@ -67,11 +67,9 @@ def parse_command(user_input, completer, category=None) -> pgf.Expr:
     except pgf.ParseError as ex:
         # If category is set, then it is already second try, so we try to predict the input.
         if category:
-            # Setting context information
+            # Getting prediction.
             prediction = completer.get_prediction(user_input, None)
             if prediction != user_input:
-                # Removing possible double whitespaces.
-                # prediction = " ".join(prediction.split())
                 say(f'Did you mean to say "{prediction}"?', "program")
             else:
                 say("Unfortunately, I could not understand you.", "program")
