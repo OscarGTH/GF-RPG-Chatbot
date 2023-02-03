@@ -18,7 +18,18 @@ A chatbot that allows playing text based RPG game. Input is parsed with Grammati
 
 ## Screenshots of the game
 
+### Describing enemies
+
 ![localImage](./images/describe.png)
+
+### Fighting enemies
+
 ![localImage](./images/battle.png)
+
+### Finding items from defeated enemies
+
 ![localImage](./items.png)
+
+### Opening locked entities
+
 ![localImage](./opening.png)
