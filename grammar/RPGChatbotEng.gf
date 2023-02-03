@@ -139,7 +139,10 @@ lin
     mkUtt ( mkS negativePol ( mkCl ( mkNP youPol_Pron ) ( mkVP ( mkVP ( mkVPSlash can8know_VV ( mkVPSlash loot_V2 ) ) ( mkNP ( mkDet that_Quant ) ) ) ( S.mkAdv because_Subj ( mkS ( mkCl ( mkVP (mkA "alive") ) ) ) ) ) ) );
   AttackSuccess enemy damage =
     mkUtt ( mkS and_Conj ( mkS ( mkCl ( mkNP youPol_Pron ) hit_V2 ( mkNP the_Quant enemy ) ) ) ( mkS pastTense ( mkCl ( mkNP it_Pron ) lose_V2 ( mkNP a_Quant ( mkNum ( mkCard damage ) ) health_N ) ) ) ) ;
-  
+  -- There is nothing to attack.
+  AttackFail =
+    mkUtt ( mkS ( mkCl ( mkNP nothing_NP ( mkAdv to_Prep ( mkNP ( mkCN attack_N ) ) ) ) ) ) ;
+  -- "You have 50 health left"
   PlayerHealth health =
     mkUtt ( mkS ( mkCl ( mkNP youPol_Pron ) have_V2 ( mkNP a_Quant ( mkNum ( mkCard health ) ) ( mkCN ( mkCN health_N ) ( mkNP ( mkDet a_Quant pluralNum left_Ord ) ) ) ) ) ) ;
 
@@ -217,6 +220,17 @@ lin
   PlayerDeath =
     mkUtt ( mkS pastTense ( mkCl ( mkNP youPol_Pron ) die_V ) ) ;
 
+  -- "You used <item>"
+  ItemUse item =
+     mkUtt ( mkS pastTense ( mkCl ( mkNP youPol_Pron ) use_V2 ( mkNP item ) ) ) ;
+
+  -- You recovered <amount> health
+  HealthRecover amount = 
+     mkUtt ( mkS pastTense ( mkCl ( mkNP youPol_Pron ) recover_V2 ( mkNP a_Quant ( mkNum ( mkCard amount ) ) health_N ) ) ) ; 
+
+  InvalidInput =
+    mkUtt ( mkS negativePol ( mkCl ( mkNP i_Pron ) understand_V2 ( mkNP ( mkQuant youPl_Pron ) input_N ) ) );
+
   -- Lexicon
   -- Moving directions
   Forward = mkNP (mkN "forward") ;
@@ -254,6 +268,7 @@ lin
   -- Enemy traits
   Weak = mkA "weak" ;
   Strong = mkA "strong" ;
+  
   EnemyMod adjective enemy = mkCN adjective enemy ;
 
   -- Item nouns
@@ -283,6 +298,8 @@ lin
   action_N = mkN "action" ;
   inventory_N = mkN "inventory" ;
   room_N = mkN "room" ;
+  attack_N = mkN "attack" ;
+  input_N = mkN "input" ;
 
   -- Item modifiers
   Sharp = mkA "sharp" ;
@@ -313,6 +330,8 @@ lin
   loot_V2 = mkV2 "loot" ;
   describe_V2 = mkV2 (mkV "describe") ;
   attack_V2 = mkV2 (mkV "attack") ;
+  recover_V2 = mkV2 (mkV "recover" ) ;
+  use_V2 = mkV2 (mkV "use" ) ;
   move_V2 = mkV2 (mkV "move") ;
   search_V2 = mkV2 (mkV "search") ;
   lock_V2 = mkV2 (mkV "lock" "locked" "locked") ;

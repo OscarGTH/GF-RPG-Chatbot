@@ -170,6 +170,13 @@ class Player:
         self.power = total_power
         self.health = total_health
 
+    def check_for_respawn_item(self) -> bool:
+        """ Checks if player is carrying item that can respawn them once. """
+        if self.is_item_in_inventory("UndyingTotem", "Backpack"):
+            return True
+        else:
+            return False
+
     def get_attack_power_with_weapon(self, item) -> int:
         """Calculates how much attack power player has with weapon and returns the value."""
         sub_inv = self.get_item_subinventory(item)

@@ -68,11 +68,24 @@ def parse_command(user_input, completer, category=None) -> pgf.Expr:
         # If category is set, then it is already second try, so we try to predict the input.
         if category:
             # Getting prediction.
-            prediction = completer.get_prediction(user_input, None)
-            if prediction != user_input:
-                say(f'Did you mean to say "{prediction}"?', "program")
+            prediction, msg = completer.get_prediction(user_input, None)
+            if prediction and prediction != user_input:
+                say(f'Did you mean to say "{prediction}"? y/n', "program")
+                # Asking if the prediction should be used
+                user_agreement = input()
+                if user_agreement == "y":
+                    # Printing the prediction in a normal way instead of using say,
+                    # to make it look like it's user's own input.
+                    print(prediction + "\n")
+                    # Parsing the prediction.
+                    return parse_command(prediction, completer)
+                else:
+                    return None
+            # If prediction couldn't be made but message was returned, then we say it.
+            if not prediction and msg:
+                say(linearize_expr(msg), "neg_result")
             else:
-                say("Unfortunately, I could not understand you.", "program")
+                say(linearize_expr("InvalidInput"), "program")
             return None
         else:
             # Setting category to question to try if input can then be parsed.
@@ -83,7 +96,43 @@ def remove_duplicate_substring(string):
     """Removes duplicate occurences of substring next to each other,
     such as 'attack >beefy< beefy skeleton'"""
     words = string.split()
-    return ' '.join([words[i] for i in range(len(words)) if (i == 0) or words[i] != words[i - 1]])
+    return " ".join(
+        [words[i] for i in range(len(words)) if (i == 0) or words[i] != words[i - 1]]
+    )
+
+
+def delete_duplicate_modifiers(input_list, category, base_mod):
+    """Deletes duplicate and extra item or enemy modifier from input."""
+    # Reading category to pgf type.
+    pgf_cat = pgf.readType(category)
+    # Looping over the words in the list
+    for k, word in enumerate(input_list):
+        try:
+            # Trying to parse the word
+            res = language.parse(word, cat=pgf_cat)
+            # If word can be parsed as attribute, we go here.
+            if res:
+                # If base modifier has not been set yet, then it is set here.
+                if not base_mod:
+                    p, tree = res.__next__()
+                    base_mod = str(tree)
+                # Checking that the current word is not the last word of the list.
+                if k < len(input_list) - 1:
+                    next_word = input_list[k + 1]
+                    # Checking for easy match without parsing the next word OR parse the next word.
+                    if next_word == word or language.parse(next_word, cat=pgf_cat):
+                        # Removes either duplicate modifier (e.g ["attack", "weak", "weak]" -> ["attack", "weak"])
+                        # OR removes extra modifier (e.g ["attack", "weak", "infernal"] -> ["attack", "weak"])
+                        input_list.pop(k + 1)
+                        # Calling itself recursively and passing modified input list and base modifier as arguments.
+                        return delete_duplicate_modifiers(
+                            input_list, category, base_mod
+                        )
+        # Word could not be parsed as attribute, so we can safely skip it and move on to next word of the list.
+        except pgf.ParseError:
+            pass
+    # Returning to original call by making the list string again and passing the base modifier.
+    return " ".join(input_list), base_mod
 
 
 class GFCompleter(Completer):
@@ -95,8 +144,10 @@ class GFCompleter(Completer):
         possible_command,
     ):
         """Tries to predict incomplete input string as accurately as possible.
-        Takes context into account, so it does not predict scenarios that cannot happen.
+        Takes context into account, so it tries not to predict scenarios that cannot happen.
         """
+        if not sugg_string:
+            return None, None
         # Getting suggestion based on the suggestion string.
         suggestions = language.complete(sugg_string)
         try:
@@ -108,7 +159,35 @@ class GFCompleter(Completer):
                 possible_command = sugg[3]
             # Catching enemies, items and objects as those need to be filtered to match context.
             if sugg[2] == "Enemy":
+                # If enemies exist in the room, then we continue
+                if not self.enemy_suggestions:
+                    # Returning none as the prediction and attack fail as the message to be printed.
+                    return None, "AttackFail"
+                # Splitting suggestion string into a list
+                sug_words = sugg_string.split()
+                # Deleting duplicate modifiers e.g "Attack young young wizard" -> "Attack young wizard"
+                # Returning the first modifier of the command as well.
+                sugg_string, base_mod = delete_duplicate_modifiers(
+                    sug_words, "EnemyAttribute", None
+                )
+                # Linearizing the suggestion of random enemy already.
                 term = linearize_expr(get_random_array_item(self.enemy_suggestions))
+                # If base enemy modifier was detected, then it is parsed.
+                if base_mod:
+                    # Getting random enemy with the same modifier as the base modifier of the command
+                    matching_enemy_name = get_random_array_item(
+                        [
+                            enemy.name
+                            for enemy in self.enemies
+                            if enemy.modifier == base_mod
+                        ]
+                    )
+                    # If matching enemy was found, then we select that for our prediction.
+                    if matching_enemy_name:
+                        term = linearize_expr(matching_enemy_name)
+                    else:
+                        # If enemy with the base modifier was not found, then we want to get rid of the base modifier.
+                        sugg_string = sugg_string.rsplit(" ", 1)[0]
             # Catching items to add context.
             elif sugg[2] == "Item":
                 key = None
@@ -134,12 +213,12 @@ class GFCompleter(Completer):
                 term = linearize_expr(chosen_item.name)
             elif sugg[2] == "Object":
                 chosen_object = get_random_array_item(self.objects)
+                key = None
                 # Setting keys for specific actions
                 if possible_command == "Loot":
                     key = "lootable"
                 elif possible_command == "Open":
                     key = "locked"
-                
                 if key:
                     filtered = [x for x in self.objects if x.attributes.get(key)]
                     if filtered:
@@ -158,7 +237,8 @@ class GFCompleter(Completer):
 
         except StopIteration:
             # Returning final constructed string.
-            return sugg_string
+            # Returning msg as None, because prediction was generated.
+            return sugg_string, None
 
     def set_info(self, player, room):
         """Updates fresh information about the context,
@@ -187,18 +267,28 @@ class GFCompleter(Completer):
         self.valid_directions = self.room.get_possible_moving_directions()
 
     def get_completions(self, document, complete_event):
-
+        """Returns completions for prompt."""
         comp = language.complete(document.text)
         try:
+            # Saving all suggestions
             all_suggs = [x for x in comp]
+            # If there are some, continue.
             if all_suggs:
+                # Making list to handle duplications.
                 yielded = []
+                # Iterating through each sugg.
                 for sugg in all_suggs:
+                    # Checking suggestion abstract type
                     if sugg[2] == "Enemy":
+                        # Only allowing enemies that are in the room.
                         for enemy in self.enemy_suggestions:
+                            # If enemy has not been suggested, then suggest it.
                             if enemy not in yielded:
+                                # Add enemy to list, so it's not suggested again.
                                 yielded.append(enemy)
+                                # Linearing enemy name
                                 linearized = linearize_expr(enemy)
+                                # yielding suggestion.
                                 yield Completion(linearized, start_position=0)
                     elif sugg[2] == "Item":
                         for item in self.item_suggestions:
@@ -216,6 +306,7 @@ class GFCompleter(Completer):
                         if sugg[1] not in yielded:
                             yielded.append(sugg[1])
                             yield Completion(sugg[1], start_position=0)
+                    # Checking for function
                     elif sugg[3] in [
                         "QDirectionQuery",
                         "Move",
@@ -233,6 +324,7 @@ class GFCompleter(Completer):
                         if sugg[1] not in yielded:
                             yielded.append(sugg[1])
                             yield Completion(sugg[1], start_position=0)
+                    # Allowing attack same target suggestions only when player is in combat.
                     elif sugg[3] == "AttackSameTarget" and self.player.in_combat:
                         if sugg[1] not in yielded:
                             yielded.append(sugg[1])
@@ -250,6 +342,7 @@ def say(
     no_delay=False,
     line_end="\n",
 ):
+    """Says a phrase in the terminal."""
     if style in STYLES:
         text_style = STYLES.get(style)
         if capitalize:

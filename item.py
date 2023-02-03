@@ -1,7 +1,7 @@
-
 import random
 from utils import get_random_key
 from constants import items, item_modifiers
+
 
 class Item:
     """Class that represents a single item."""
@@ -30,7 +30,7 @@ class Item:
         base_name = item_type if item_type else get_random_key(items)
         if item_modifier and item_modifier in item_modifiers:
             modifier = item_modifier
-        elif self.allow_mods:
+        elif self.allow_mods and items[base_name].get("type") != "misc":
             # Generating item modifier on a 40% chance.
             if random.randint(0, 100) < 40:
                 # Generating random modifier

@@ -73,13 +73,20 @@ fun
   ItemSlotTaken : Item -> Location -> Result ;
   -- "You hit the depressed goblin and they lost 10 health"
   AttackSuccess : Enemy -> Digits -> Result ;
+  -- "There is nothing to attack"
+  AttackFail : Result ;
   -- "The goblin hit you and you lost 10 health"
   EnemyAttack : Enemy -> Digits -> Result ;
   -- "You have 10 health left."
   PlayerHealth : Digits -> Result ;
   -- "The angry goblin has 15 health left"
-  EnemyHealth : Enemy -> Digits -> Result ; 
+  EnemyHealth : Enemy -> Digits -> Result ;
+  -- "You died"
   PlayerDeath : Result ;
+  -- "You used <item>"
+  ItemUse : Item -> Result ;
+  -- "You recovered <digits> health"
+  HealthRecover : Digits -> Result ;
   -- Old tiger|door doesn't exist.
   ObjectMissing : Object -> Result ;
   -- Telling that object is locked.
@@ -112,6 +119,8 @@ fun
   BattleInvalidTarget : Enemy -> Result ;
   -- Used to tell the user that the action is not valid.
   InvalidAction : Result ;
+  -- Used to tell that command is not understood.
+  InvalidInput : Result ;
   -- Telling that item does not exist.
   ItemMissing : Item -> Result ;
   
@@ -145,8 +154,8 @@ fun
   Win, Lose : Outcome ;
 
   -- Helper verbs
-  loot_V2, drop_V2, describe_V2, attack_V2, equip_V2, unequip_V2, move_V2, lock_V2, search_V2, unlock_V2 : Action ;
-  health_N, action_N, inventory_N, room_N : Nouns ;
+  loot_V2, drop_V2, describe_V2, attack_V2, recover_V2, use_V2, equip_V2, unequip_V2, move_V2, lock_V2, search_V2, unlock_V2 : Action ;
+  health_N, action_N, inventory_N, room_N, attack_N, input_N : Nouns ;
   -- Used for creating numbered rooms such as "Room 15"
   RoomNumber : Int -> Room ;
   

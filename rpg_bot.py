@@ -1,7 +1,8 @@
 import sys
 import random
 import time
-from prompt_toolkit import prompt, HTML
+from prompt_toolkit import prompt, HTML, PromptSession
+
 from utils import (
     say,
     int_to_digit,
@@ -29,6 +30,8 @@ class RPGBot:
         self.room = Room(self.room_number)
         # Initializing input suggester
         self.input_completer = GFCompleter()
+        # Initializing prompt session for keeping input history.
+        self.session = PromptSession()
         # self.print_room_details(self.room)
         self.run_main_loop()
         pass
@@ -53,7 +56,7 @@ class RPGBot:
             self.input_completer.set_info(self.player, self.room)
             say(linearize_expr("InputPrompt") + "?", "misc", start_lb=True)
             # Prompting for user input with automatic suggestions.
-            user_input = prompt(
+            user_input = self.session.prompt(
                 "> ",
                 completer=self.input_completer,
                 bottom_toolbar=self.player_stat_toolbar,
@@ -153,7 +156,10 @@ class RPGBot:
         if self.room.check_if_entity_exists("Enemy", parsed_name):
             self.run_battle(args[1], parsed_name)
         else:
-            say("Enemy not found.", "narrative")
+            say(
+                linearize_expr(f"ObjectMissing (EnemyObject {parsed_name})"),
+                "neg_result",
+            )
 
     def run_battle(self, weapon_arg, enemy_name) -> bool:
         """Handles the battle loop."""
@@ -187,7 +193,11 @@ class RPGBot:
                     )
                     self.input_completer.set_info(self.player, self.room)
                     # Receiving command from player.
-                    battle_input = prompt("##> ", completer=self.input_completer, bottom_toolbar=self.player_stat_toolbar)
+                    battle_input = self.session.prompt(
+                        "##> ",
+                        completer=self.input_completer,
+                        bottom_toolbar=self.player_stat_toolbar,
+                    )
                     # Player can show available commands.
                     if battle_input == "help":
                         self.help()
@@ -227,16 +237,28 @@ class RPGBot:
                                     command, blocked_commands=["Move", "Loot", "Open"]
                                 )
             else:
-                say(
-                    linearize_expr(f"FightResult {enemy.name} Win") + ".",
-                    "neg_result",
-                    end_lb=True,
-                )
-                say(linearize_expr("PlayerDeath") + ".", "neg_result")
-                play_sounds("player_death.wav")
-                time.sleep(3)
-                # Ending program.
-                sys.exit(1)
+                if self.player.check_for_respawn_item():
+                    # TODO: This could be generalized.
+                    # Removing respawn item from inventory
+                    self.player.remove_item_from_subinventory(
+                        self.player.get_item_from_inventory("UndyingTotem"), "Backpack"
+                    )
+                    # Adding 50 health to player.
+                    self.player.health = 50
+                    say(linearize_expr("ItemUse UndyingTotem"), "pos_result")
+                    say(linearize_expr(f"HealthRecover {50}"), "pos_result")
+                else:
+                    # Game will end as player died.
+                    say(
+                        linearize_expr(f"FightResult {enemy.name} Win") + ".",
+                        "neg_result",
+                        end_lb=True,
+                    )
+                    say(linearize_expr("PlayerDeath") + ".", "neg_result")
+                    # Playing death sound.
+                    play_sounds("player_death.wav")
+                    # Ending program.
+                    sys.exit(1)
         say(linearize_expr(f"FightResult {enemy.name} Lose") + ".", "neg_result")
         # Looting the enemy's items.
         self.loot_enemy(enemy)
@@ -534,10 +556,9 @@ class RPGBot:
         say("-" * 20, "help")
         keys = list(command_tree_examples)
         for key in keys:
-            say("[" + key + "]", "help")
+            say("[" + key + "]", "program")
             for expr_str in command_tree_examples.get(key):
-                say(linearize_expr(expr_str), "help")
-            print("\n")
+                say(linearize_expr(expr_str), "help", capitalize=False)
         say("-" * 20, "help", end_lb=True)
 
 

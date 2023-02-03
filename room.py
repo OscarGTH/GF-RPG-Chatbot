@@ -58,6 +58,7 @@ class Room:
                 for key, val in move_directions.items()
                 if val == self.get_direction_of_entity(ent.name)
                 and ent.attributes.get("passable")
+                and not ent.attributes.get("locked")
             ]
             if passable:
                 directions.append(passable[0])
@@ -209,7 +210,7 @@ class Room:
         while True:
             if entity_type == "Enemy":
                 # Making new entity randomly.
-                new_ent = Enemy()
+                new_ent = Enemy(self.number)
             else:
                 new_ent = Object()
             # If name of the new entity is not in existing entities list, then we can add it.

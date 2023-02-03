@@ -1,5 +1,3 @@
-
-
 # GF categories
 # Path directions are named differently than moving directions, so lookup table needs to exist.
 move_directions = {
@@ -10,14 +8,14 @@ move_directions = {
 }
 # TODO: Balance enemies.
 enemies = {
-    "Troll": {"health": 30, "power": 25},
-    "Ghoul": {"health": 20, "power": 8},
+    "Troll": {"health": 18, "power": 25},
+    "Ghoul": {"health": 30, "power": 8},
     "Goblin": {"health": 10, "power": 5},
-    "Dragon": {"health": 90, "power": 20},
-    "GiantRat": {"health": 28, "power": 8},
+    "Dragon": {"health": 60, "power": 20},
+    "GiantRat": {"health": 20, "power": 8},
     "Demon": {"health": 80, "power": 60},
-    "Skeleton": {"health": 35, "power": 15},
-    "Wizard": {"health": 40, "power": 35},
+    "Skeleton": {"health": 15, "power": 15},
+    "Wizard": {"health": 25, "power": 30},
 }
 
 enemy_attributes = ["Weak", "Strong"]
@@ -48,7 +46,7 @@ enemy_modifiers = {
         "appears_from_room": 10,
         "loot_categories": ["Rare", "Epic"],
     },
-        "Infernal": {
+    "Infernal": {
         "modifier": lambda power, health: (round(power * 2.5), health * 3),
         "appears_from_room": 20,
         "loot_categories": ["Unique"],
@@ -88,7 +86,7 @@ items = {
         "type": "weapon",
         "rarity": "Common",
         "fits": ["Backpack"],
-        "sound": "sword_hit.wav"
+        "sound": "sword_hit.wav",
     },
     "Axe": {
         "power": 13,
@@ -96,7 +94,7 @@ items = {
         "type": "weapon",
         "rarity": "Rare",
         "fits": ["Backpack"],
-        "sound": "axe_hit.wav"
+        "sound": "axe_hit.wav",
     },
     "Hammer": {
         "power": 10,
@@ -104,7 +102,7 @@ items = {
         "type": "weapon",
         "rarity": "Common",
         "fits": ["Backpack"],
-        "sound": "hammer_hit.wav"
+        "sound": "hammer_hit.wav",
     },
     "WizardStaff": {
         "power": 20,
@@ -112,13 +110,20 @@ items = {
         "type": "weapon",
         "rarity": "Epic",
         "fits": ["Backpack"],
-        "sound": "magic_hit.wav"
+        "sound": "magic_hit.wav",
     },
     "Key": {
         "power": 1,
         "health": 0,
         "type": "misc",
         "rarity": "Rare",
+        "fits": ["Backpack"],
+    },
+    "UndyingTotem": {
+        "power": 1,
+        "health": 0,
+        "type": "misc",
+        "rarity": "Unique",
         "fits": ["Backpack"],
     },
     "PlatiniumSkirt": {
@@ -189,17 +194,21 @@ locations = ["Backpack", "Head", "Legs"]
 room_modifiers = ["Damp", "Bright", "Dark", "Creepy", "Scary", "Peaceful"]
 # Used in help command by linearizing these to show what can be said.
 command_tree_examples = {
-    "Descriptive": ["DescribeEnemy Demon", "DescribeEnemy (EnemyMod Young Goblin)"],
+    "Descriptive": [
+        "DescribeEnemy Demon",
+        "DescribeEnemy (EnemyMod Young Goblin)",
+    ],
     "Drop": ["Drop (ItemMod Mysterious PlatiniumSkirt)", "Drop WizardStaff"],
-    "Put": ["Put (ItemMod Mysterious PlatiniumSkirt) Legs", "Put PlatiniumSkirt Legs"],
+    "Equip": ["Equip (ItemMod Mysterious PlatiniumSkirt)", "Equip PlatiniumSkirt"],
+    "Unequip": ["Unequip LeatherSkirt"],
     "Attack": [
         "Attack Goblin Hammer",
         "Attack (EnemyMod Young Goblin) (ItemMod Mysterious Sword)",
         "Attack (EnemyMod Young Goblin) Hammer",
         "Attack Dragon (ItemMod Mysterious Axe)",
     ],
-    "Loot": ["Loot Chest"],
+    "Loot": ["Loot Chest", "Loot PileOfBones"],
     "Move": ["Move Backward", "Move Forward", "Move Left", "Move Right"],
     "Item Query": ["QItemQuery Backpack", "QItemQuery Legs", "QItemQuery Head"],
-    "Direction Query": ["QDirectionQuery Infront"],
+    "Direction Query": ["QDirectionQuery Infront", "QDirectionQuery Behind"],
 }
