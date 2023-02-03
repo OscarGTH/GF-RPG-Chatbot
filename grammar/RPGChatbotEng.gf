@@ -149,8 +149,8 @@ lin
   
   -- There is nothing to attack.
   AttackFail =
-    mkUtt ( mkS ( mkCl ( mkNP nothing_NP ( mkAdv to_Prep ( mkNP ( mkCN attack_N ) ) ) ) ) ) ;
-  
+    mkUtt ( mkS ( mkCl ( mkNP nothing_NP ( SyntaxEng.mkAdv to_Prep ( mkNP ( mkCN attack_N ) ) ) ) ) ) ;
+
   -- "You have 50 health left"
   PlayerHealth health =
     mkUtt ( mkS ( mkCl ( mkNP youPol_Pron ) have_V2 ( mkNP a_Quant ( mkNum ( mkCard health ) ) ( mkCN ( mkCN health_N ) ( mkNP ( mkDet a_Quant pluralNum left_Ord ) ) ) ) ) ) ;
@@ -241,7 +241,7 @@ lin
      mkUtt ( mkS pastTense ( mkCl ( mkNP youPol_Pron ) recover_V2 ( mkNP a_Quant ( mkNum ( mkCard amount ) ) health_N ) ) ) ; 
 
   InvalidInput =
-    mkUtt ( mkS negativePol ( mkCl ( mkNP i_Pron ) understand_V2 ( mkNP ( mkQuant youPl_Pron ) input_N ) ) );
+    mkUtt ( mkS negativePol ( mkCl ( mkNP i_Pron ) understand_V2 ( mkNP ( mkDet youPl_Pron ) input_N ) ) );
 
   -- Lexicon
   -- Moving directions
