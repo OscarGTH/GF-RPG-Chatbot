@@ -38,6 +38,7 @@ lin
     mkUtt (mkImp move_V2 dir);
   Attack enemy item =
     -- All article forms.
+    -- TODO: FIX THESE, there has to be a better way to include article forms...
       mkUtt (mkImp (mkVP (mkVP attack_V2  (mkNP the_Det enemy)) (S.mkAdv with_Prep (mkNP item))))
     | mkUtt (mkImp (mkVP (mkVP attack_V2 (mkNP the_Det enemy)) (S.mkAdv with_Prep (mkNP the_Det item))))
     | mkUtt (mkImp (mkVP (mkVP attack_V2 (mkNP enemy)) (S.mkAdv with_Prep (mkNP the_Det item))))
@@ -66,10 +67,12 @@ lin
   Equip item =
     mkUtt (mkImp ( mkVP equip_V2 ( mkNP item ) ))
     | mkUtt (mkImp ( mkVP equip_V2 ( mkNP the_Det item ) )) ;
+
   -- For unequiping items, same as moving away from subinventory to backpack.
   Unequip item =
     mkUtt (mkImp ( mkVP unequip_V2 ( mkNP item ) ))
     | mkUtt (mkImp ( mkVP unequip_V2 ( mkNP the_Det item ) )) ;
+
   Open item object =
     -- All possibilities of phrase (with both determiners, 1/2, 0/2 determiners.)
       mkUtt (mkImp ( mkVP ( mkVP open_V2 ( mkNP the_Det object)) (S.mkAdv with_Prep (mkNP the_Det item))))
@@ -135,13 +138,19 @@ lin
   -- Result of failed movement action (eg. There is a boulder blocking the way)
   MoveFail object =
     mkUtt ( mkS negativePol ( mkCl ( mkNP youSg_Pron ) ( mkVP ( mkVP ( mkVP can8know_VV ( mkVP (mkV "go") ) ) there7to_Adv ) ( S.mkAdv because_Subj ( mkS ( mkCl ( mkNP a_Quant object ) ) ) ) ) ) ) ;
+  
+  -- You cannot loot that because it is alive
   LootEnemyFail =
     mkUtt ( mkS negativePol ( mkCl ( mkNP youPol_Pron ) ( mkVP ( mkVP ( mkVPSlash can8know_VV ( mkVPSlash loot_V2 ) ) ( mkNP ( mkDet that_Quant ) ) ) ( S.mkAdv because_Subj ( mkS ( mkCl ( mkVP (mkA "alive") ) ) ) ) ) ) );
+  
+  -- You hit the enemy and they lost 50 health
   AttackSuccess enemy damage =
     mkUtt ( mkS and_Conj ( mkS ( mkCl ( mkNP youPol_Pron ) hit_V2 ( mkNP the_Quant enemy ) ) ) ( mkS pastTense ( mkCl ( mkNP it_Pron ) lose_V2 ( mkNP a_Quant ( mkNum ( mkCard damage ) ) health_N ) ) ) ) ;
+  
   -- There is nothing to attack.
   AttackFail =
     mkUtt ( mkS ( mkCl ( mkNP nothing_NP ( mkAdv to_Prep ( mkNP ( mkCN attack_N ) ) ) ) ) ) ;
+  
   -- "You have 50 health left"
   PlayerHealth health =
     mkUtt ( mkS ( mkCl ( mkNP youPol_Pron ) have_V2 ( mkNP a_Quant ( mkNum ( mkCard health ) ) ( mkCN ( mkCN health_N ) ( mkNP ( mkDet a_Quant pluralNum left_Ord ) ) ) ) ) ) ;
@@ -174,6 +183,7 @@ lin
   -- Telling user that an action cannot be done at the moment.
   InvalidAction =
      mkUtt ( mkS negativePol ( mkCl ( mkNP youPol_Pron ) ( mkVP ( mkVP ( mkVPSlash can8know_VV ( mkVPSlash do_V2 ) ) ( mkNP ( mkDet that_Quant right_Ord ) ) ) L.now_Adv ) ) ) ;
+  
   -- Telling user that they cannot attack other targets while in a battle with one.
   BattleInvalidTarget enemy =
     mkUtt ( mkS negativePol ( mkCl ( mkNP youPol_Pron ) ( mkVP ( mkVP ( mkVPSlash can8know_VV ( mkVPSlash do_V2 ) ) ( mkNP ( mkDet that_Quant ) ) ) ( S.mkAdv because_Subj ( mkS ( mkCl ( mkNP youPol_Pron ) ( mkVP ( progressiveVP ( mkVP fight_V2 ( mkNP enemy ) ) ) already_Adv ) ) ) ) ) ) );
@@ -209,9 +219,11 @@ lin
   -- The dragon is weak against sharp items.
   EnemyDescWithoutItem enemy powerType itemKind = 
     mkUtt ( mkS ( mkCl ( mkNP the_Quant enemy ) ( mkVP ( mkVP powerType ) ( S.mkAdv (mkPrep "against") itemKind ) ) ) ) ;
+  
   -- What will you do now?
   InputPrompt =
     mkQS futureTense ( mkQCl whatPl_IP ( mkClSlash ( mkClSlash youPol_NP ( mkVPSlash (mkV2 "do") ) ) L.now_Adv ) ) ;
+  
   -- What is your next action?
   BattlePrompt =
     mkQS ( mkQCl ( mkIComp whatPl_IP ) ( mkNP ( C.mkQuant youPl_Pron ) ( mkCN ( mkAP (mkA "next") ) ( mkCN action_N ) ) ) ) ;

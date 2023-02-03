@@ -1,7 +1,6 @@
 abstract RPGChatbot = Numeral ** {
 flags startcat = Command ;
 cat
-  Question ;
   Command ;
   Result ;
   Outcome ; 
@@ -24,13 +23,13 @@ cat
 fun
   -- User actions
 
-  -- what is <in front of me | behind me | on my left | on my right>
+  -- what is <in front of me | behind me | on the left of me | on the right of me>
   QDirectionQuery : QuestionDirection -> Command ;
   -- what is in my backpack
   QItemQuery : Location -> Command ;
   -- what is in this room
   QEntityQuery : Nouns -> Command ;
-  -- Move forward, left, right, backwards.
+  -- Move forward, left, right, backward.
   Move : MoveDirection -> Command ;
   -- Attack <enemy name> with <item name>.
   Attack : Enemy -> Item -> Command ;
@@ -71,7 +70,7 @@ fun
   UnequipFail : Item -> Result ; 
   -- "head has viking helmet already"
   ItemSlotTaken : Item -> Location -> Result ;
-  -- "You hit the depressed goblin and they lost 10 health"
+  -- "You hit the infernal goblin and they lost 10 health"
   AttackSuccess : Enemy -> Digits -> Result ;
   -- "There is nothing to attack"
   AttackFail : Result ;
@@ -79,7 +78,7 @@ fun
   EnemyAttack : Enemy -> Digits -> Result ;
   -- "You have 10 health left."
   PlayerHealth : Digits -> Result ;
-  -- "The angry goblin has 15 health left"
+  -- "The weak goblin has 15 health left"
   EnemyHealth : Enemy -> Digits -> Result ;
   -- "You died"
   PlayerDeath : Result ;
@@ -87,7 +86,7 @@ fun
   ItemUse : Item -> Result ;
   -- "You recovered <digits> health"
   HealthRecover : Digits -> Result ;
-  -- Old tiger|door doesn't exist.
+  -- goblin|door doesn't exist.
   ObjectMissing : Object -> Result ;
   -- Telling that object is locked.
   ObjectLocked : Object -> Result ;
@@ -105,9 +104,9 @@ fun
   LootEnemyFail : Result ;
   -- Telling that enemy is weak/strong against some item attribute and that they have some specific item.
   EnemyDescWithItem : Enemy -> EnemyAttribute -> ItemDescription -> Item -> Result ;
-  -- Telling that enemy is weak/strong against some item attribute and that they have some specific item.
+  -- Telling that enemy is weak/strong against some item attribute.
   EnemyDescWithoutItem : Enemy -> EnemyAttribute -> ItemDescription -> Result ;
-  -- There is an angry dragon with shiny sword.
+  -- There is an infernal dragon with shiny sword.
   EnemyEncountered : Enemy -> Item -> Result ;
   -- You arrive into a room <number>.
   RoomIntro : Room -> RoomAdjective -> Result ;
@@ -125,13 +124,13 @@ fun
   ItemMissing : Item -> Result ;
   
   -- Lexicon
-  -- Shiny sword, Dull axe, Sharp bread
+  -- Shiny sword, Dull axe, Magical hammer
   ItemMod : ItemAttribute -> Item -> Item ;
   -- Shiny items, Dull items
   ItemType : ItemAttribute -> ItemDescription ;
   Sharp, Dull, Broken, Legendary, Magical, Shiny, Fiery, Mysterious, Frozen : ItemAttribute ;
   Sword, Axe, Hammer, WizardStaff, Key, PlatiniumSkirt, LeatherSkirt, VikingHelmet, BaseballCap, UndyingTotem : Item;
-  -- Angry dragon, Nice mouse
+  -- Veteran demon, infernal orc
   EnemyMod : EnemyAttribute -> Enemy -> Enemy ;
   Infernal, Veteran, Young, Rabid, Beefy, Weak, Strong : EnemyAttribute ;
 
@@ -154,6 +153,7 @@ fun
   Win, Lose : Outcome ;
 
   -- Helper verbs
+  -- TODO: Fix these as they throw errors.
   loot_V2, drop_V2, describe_V2, attack_V2, recover_V2, use_V2, equip_V2, unequip_V2, move_V2, lock_V2, search_V2, unlock_V2 : Action ;
   health_N, action_N, inventory_N, room_N, attack_N, input_N : Nouns ;
   -- Used for creating numbered rooms such as "Room 15"

@@ -52,44 +52,35 @@ def linearize_expr(expression) -> str:
     return language.linearize(pgf.readExpr(expression))
 
 
-def parse_command(user_input, completer, category=None) -> pgf.Expr:
+def parse_command(user_input, completer) -> pgf.Expr:
     """Parses the user command in GF format and returns the parse tree."""
     try:
-        # Category can be used to parse input from different category, such as a question.
-        if category:
-            parseresult = language.parse(user_input, cat=pgf.readType(category))
-        else:
-            # Parsing command category by default
-            parseresult = language.parse(user_input)
+        # Parsing command category by default
+        parseresult = language.parse(user_input)
         prob, tree = parseresult.__next__()
         return tree
     # Catching parse errors
     except pgf.ParseError as ex:
-        # If category is set, then it is already second try, so we try to predict the input.
-        if category:
-            # Getting prediction.
-            prediction, msg = completer.get_prediction(user_input, None)
-            if prediction and prediction != user_input:
-                say(f'Did you mean to say "{prediction}"? y/n', "program")
-                # Asking if the prediction should be used
-                user_agreement = input()
-                if user_agreement == "y":
-                    # Printing the prediction in a normal way instead of using say,
-                    # to make it look like it's user's own input.
-                    print(prediction + "\n")
-                    # Parsing the prediction.
-                    return parse_command(prediction, completer)
-                else:
-                    return None
-            # If prediction couldn't be made but message was returned, then we say it.
-            if not prediction and msg:
-                say(linearize_expr(msg), "neg_result")
+        # Getting prediction.
+        prediction, msg = completer.get_prediction(user_input, None)
+        if prediction and prediction != user_input:
+            say(f'Did you mean to say "{prediction}"? y/n', "program")
+            # Asking if the prediction should be used
+            user_agreement = input()
+            if user_agreement == "y":
+                # Printing the prediction in a normal way instead of using say,
+                # to make it look like it's user's own input.
+                print(prediction + "\n")
+                # Parsing the prediction.
+                return parse_command(prediction, completer)
             else:
-                say(linearize_expr("InvalidInput"), "program")
-            return None
+                return None
+        # If prediction couldn't be made but message was returned, then we say it.
+        if not prediction and msg:
+            say(linearize_expr(msg), "neg_result")
         else:
-            # Setting category to question to try if input can then be parsed.
-            return parse_command(user_input, completer, category="Question")
+            say(linearize_expr("InvalidInput"), "program")
+        return None
 
 
 def remove_duplicate_substring(string):
