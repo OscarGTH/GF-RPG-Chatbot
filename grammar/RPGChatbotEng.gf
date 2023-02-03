@@ -31,23 +31,23 @@ lincat
   RoomAdjective = A ;
   QuestionDirection = Prep ;
 
+oper
+  -- An oper to make CN into NP with or without definite article
+  optThe : CN -> NP = \cn -> mkNP cn | mkNP the_Det cn ;
+
 lin
   -- [ COMMANDS ]
   -- Moving character
   Move dir =
     mkUtt (mkImp move_V2 dir);
+
+  -- "Attack (the) enemy with (the) item"
   Attack enemy item =
-    -- All article forms.
-    -- TODO: FIX THESE, there has to be a better way to include article forms...
-      mkUtt (mkImp (mkVP (mkVP attack_V2  (mkNP the_Det enemy)) (S.mkAdv with_Prep (mkNP item))))
-    | mkUtt (mkImp (mkVP (mkVP attack_V2 (mkNP the_Det enemy)) (S.mkAdv with_Prep (mkNP the_Det item))))
-    | mkUtt (mkImp (mkVP (mkVP attack_V2 (mkNP enemy)) (S.mkAdv with_Prep (mkNP the_Det item))))
-    | mkUtt (mkImp (mkVP (mkVP attack_V2 (mkNP enemy)) (S.mkAdv with_Prep (mkNP item)))) ;
-    
-  AttackSameTarget item = 
+    mkUtt (mkImp (mkVP (mkVP attack_V2 (optThe enemy)) (S.mkAdv with_Prep (optThe item)))) ;
+
+  AttackSameTarget item =
     -- Attacking without target
-    mkUtt (mkImp (mkVP (mkVP (mkV "attack")) (S.mkAdv with_Prep (mkNP the_Det item))))
-    | mkUtt (mkImp (mkVP (mkVP (mkV "attack")) (S.mkAdv with_Prep (mkNP item)))) ;
+    mkUtt (mkImp (mkVP (mkVP (mkV "attack")) (S.mkAdv with_Prep (optThe item)))) ;
 
 
   -- Looting enemies and entities
