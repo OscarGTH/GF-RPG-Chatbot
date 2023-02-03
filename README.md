@@ -28,8 +28,8 @@ A chatbot that allows playing text based RPG game. Input is parsed with Grammati
 
 ### Finding items from defeated enemies
 
-![localImage](./items.png)
+![localImage](./images/items.png)
 
 ### Opening locked entities
 
-![localImage](./opening.png)
+![localImage](./images/opening.png)
