@@ -42,7 +42,7 @@ Game cannot end as of yet, as I couldn't bother to add an ending.
 
 ![localImage](./images/battle.png)
 
-### Finding items from defeated enemies
+### Finding items by looting and equipping them
 
 ![localImage](./images/items.png)
 

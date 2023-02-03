@@ -1,4 +1,4 @@
 colorama==0.4.6
 pgf==1.0
+prompt_toolkit==3.0.36
 setuptools==63.2.0
-#simpleaudio==1.0.4
