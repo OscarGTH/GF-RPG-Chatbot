@@ -22,6 +22,7 @@ Game cannot end as of yet, as I couldn't bother to add an ending.
 
 - Input suggestions with Tab key
 - Predicting correct input
+- Input history with arrow keys
 - Concrete grammar only in English at the moment
 
 ## Game features:
@@ -30,6 +31,8 @@ Game cannot end as of yet, as I couldn't bother to add an ending.
 - Different types of items
 - Enemy system with different attributes
 - Enemies that can have items
+- Loot system
+- Enemies get tougher the longer you playU
 - Generative room design
 
 ## Screenshots of the game
@@ -55,6 +58,10 @@ Game cannot end as of yet, as I couldn't bother to add an ending.
 ### Question commands
 
 - what is in this room
+- what is behind me
+- what is in front of me
+- what is on the left of me
+- what is on the right of me
 - what is around me
 - what is in my backpack
 - what is on my head
