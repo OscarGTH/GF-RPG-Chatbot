@@ -268,7 +268,13 @@ class GFCompleter(Completer):
 
     def get_completions(self, document, complete_event):
         """Returns completions for prompt."""
-        comp = language.complete(document.text)
+
+        # Trying to complete the sentence
+        try:
+            comp = language.complete(document.text)
+        except:
+            # On exceptions return immediately.
+            return
         try:
             # Saving all suggestions
             all_suggs = [x for x in comp]
