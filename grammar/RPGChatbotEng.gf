@@ -305,14 +305,17 @@ lin
   Bag = mkCN (mkN "bag") ;
   PileOfBones = mkCN (mkN "pile of bones") ;
   EnemyObject enemy = mkCN enemy ;
-  -- Basic nouns 
-  health_N = mkN "health" "health" ;
-  action_N = mkN "action" ;
-  inventory_N = mkN "inventory" ;
-  room_N = mkN "room" ;
-  attack_N = mkN "attack" ;
-  input_N = mkN "input" ;
 
+  -- Basic nouns
+oper
+  health_N : N = mkN "health" "health" ;
+  action_N : N = mkN "action" ;
+  inventory_N : N = mkN "inventory" ;
+  room_N : N = mkN "room" ;
+  attack_N : N = mkN "attack" ;
+  input_N : N = mkN "input" ;
+
+lin
   -- Item modifiers
   Sharp = mkA "sharp" ;
   Dull = mkA "dull" ;
@@ -328,29 +331,29 @@ lin
   Dark = mkA "dark" ;
   Damp = mkA "damp" ;
   Bright = mkA "bright" ;
-  Creepy = mkA "creepy" ; 
+  Creepy = mkA "creepy" ;
   Scary = mkA "scary" ;
   Peaceful = mkA "peaceful" ;
-  
+
 
   -- Fight outcome verbs
   Win = mkV2 (mkV "win" "won" "won") ;
   Lose = mkV2 (mkV "lose" "lost" "lost") ;
-
+oper
   -- Useful verbs
-  drop_V2 = mkV2 (mkV "drop") ;
-  loot_V2 = mkV2 "loot" ;
-  describe_V2 = mkV2 (mkV "describe") ;
-  attack_V2 = mkV2 (mkV "attack") ;
-  recover_V2 = mkV2 (mkV "recover" ) ;
-  use_V2 = mkV2 (mkV "use" ) ;
-  move_V2 = mkV2 (mkV "move") ;
-  search_V2 = mkV2 (mkV "search") ;
-  lock_V2 = mkV2 (mkV "lock" "locked" "locked") ;
-  unlock_V2 = mkV2 (mkV "unlock" "unlocked" "unlocked") ;
-  equip_V2 = mkV2 (mkV "equip" "equipped" "equipped") ;
-  unequip_V2 = mkV2 (mkV "unequip" "unequipped" "unequipped") ;
-
+  drop_V2 : V2 = mkV2 (mkV "drop") ;
+  loot_V2 : V2 = mkV2 "loot" ;
+  describe_V2 : V2 = mkV2 (mkV "describe") ;
+  attack_V2 : V2 = mkV2 (mkV "attack") ;
+  recover_V2 : V2 = mkV2 (mkV "recover" ) ;
+  use_V2 : V2 = mkV2 (mkV "use" ) ;
+  move_V2 : V2 = mkV2 (mkV "move") ;
+  search_V2 : V2 = mkV2 (mkV "search") ;
+  lock_V2 : V2 = mkV2 (mkV "lock" "locked" "locked") ;
+  unlock_V2 : V2 = mkV2 (mkV "unlock" "unlocked" "unlocked") ;
+  equip_V2 : V2 = mkV2 (mkV "equip" "equipped" "equipped") ;
+  unequip_V2 : V2 = mkV2 (mkV "unequip" "unequipped" "unequipped") ;
+lin
   -- "Sharp items"
   ItemType adj = mkNP (mkCN adj (mkN "items")) ;
 }

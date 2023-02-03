@@ -152,11 +152,7 @@ fun
   -- Verbs used for fight outcome.
   Win, Lose : Outcome ;
 
-  -- Helper verbs
-  -- TODO: Fix these as they throw errors.
-  loot_V2, drop_V2, describe_V2, attack_V2, recover_V2, use_V2, equip_V2, unequip_V2, move_V2, lock_V2, search_V2, unlock_V2 : Action ;
-  health_N, action_N, inventory_N, room_N, attack_N, input_N : Nouns ;
   -- Used for creating numbered rooms such as "Room 15"
   RoomNumber : Int -> Room ;
-  
+
 }
