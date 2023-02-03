@@ -4,6 +4,20 @@ A chatbot that allows playing text based RPG game. Input is parsed with Grammati
 The goal of the game is to reach as many rooms as possible while gathering items and fighting enemies.
 Game cannot end as of yet, as I couldn't bother to add an ending.
 
+## How to run
+
+- Clone repository
+- Make sure to have pgf installed
+- Run command `pip install -r requirements.txt`
+- Go to directory src with `cd src`
+- Run `python rpg_bot.py`
+
+#### Remarks/To-do
+
+- Tests are outdated as of now, and I might update them to match current game at some point.
+- Game does have sounds but they are disabled, as they did not work in WSL2 (Windows subsystem for Linux).
+  To get sounds working, uncomment sound related function and imports in src/utils.py file.
+
 ## Grammatical features:
 
 - Input suggestions with Tab key

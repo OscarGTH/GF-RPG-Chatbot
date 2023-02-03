@@ -5,8 +5,12 @@ import unittest
 from unittest import mock
 import io
 import sys
-from rpg_bot import Object, Item, Room, Enemy, Player
-from utils import items, item_modifiers, objects
+from player import Player
+from item import Item
+from entity import Object
+from enemy import Enemy
+from room import Room
+from constants import items, item_modifiers, objects
 
 
 class TestPlayer(unittest.TestCase):
