@@ -42,7 +42,7 @@ class Enemy:
         name = base_name
         modifier = None
         # Generate enemy modifier on roughly 40% chance
-        if random.randint(0, 100) > 80 or force_modifier:
+        if random.randint(0, 100) > 20 or force_modifier:
             filtered_mods = {}
             # Looping over the keys of possible modifiers
             for key in enemy_modifiers.keys():

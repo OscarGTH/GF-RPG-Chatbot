@@ -37,17 +37,17 @@ enemy_modifiers = {
         "loot_categories": ["Common", "Rare", "Epic"],
     },
     "Beefy": {
-        "modifier": lambda power, health: (power + 20, health * 3),
+        "modifier": lambda power, health: (power + 20, health * 7),
         "appears_from_room": 15,
         "loot_categories": ["Rare", "Epic", "Unique"],
     },
     "Rabid": {
-        "modifier": lambda power, health: (power * 2, round(health * 0.75)),
+        "modifier": lambda power, health: (power * 2.5, round(health * 0.75)),
         "appears_from_room": 10,
         "loot_categories": ["Rare", "Epic"],
     },
     "Infernal": {
-        "modifier": lambda power, health: (round(power * 2.5), health * 3),
+        "modifier": lambda power, health: (round(power * 3), health * 5),
         "appears_from_room": 20,
         "loot_categories": ["Unique"],
     },
@@ -127,14 +127,14 @@ items = {
         "fits": ["Backpack"],
     },
     "PlatiniumSkirt": {
-        "power": 5,
+        "power": 10,
         "health": 25,
         "type": "equip",
         "rarity": "Epic",
         "fits": ["Backpack", "Legs"],
     },
     "LeatherSkirt": {
-        "power": 2,
+        "power": 5,
         "health": 15,
         "type": "equip",
         "rarity": "Rare",
@@ -142,14 +142,14 @@ items = {
     },
     "VikingHelmet": {
         "power": 12,
-        "health": 10,
+        "health": 20,
         "type": "equip",
         "rarity": "Unique",
         "fits": ["Backpack", "Head"],
     },
     "BaseballCap": {
         "power": 6,
-        "health": 8,
+        "health": 10,
         "type": "equip",
         "rarity": "Common",
         "fits": ["Backpack", "Head"],
@@ -178,7 +178,7 @@ item_modifiers = {
         "rarity": "Common",
     },
     "Fiery": {
-        "modifier": lambda power, health: (power + 16, health + 5),
+        "modifier": lambda power, health: (power + 35, health + 30),
         "rarity": "Rare",
     },
     "Mysterious": {
@@ -186,7 +186,7 @@ item_modifiers = {
         "rarity": "Unique",
     },
     "Frozen": {
-        "modifier": lambda power, health: (power + 18, health + 10),
+        "modifier": lambda power, health: (power + 45, health + 30),
         "rarity": "Epic",
     },
 }
